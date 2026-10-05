@@ -1,0 +1,1754 @@
+[
+  {
+    "type": "flex",
+    "altText": "Valorant Flex 示範",
+    "contents": {
+      "type": "bubble",
+      "size": "mega",
+      "styles": {
+        "body": {
+          "backgroundColor": "#101923"
+        },
+        "header": {
+          "backgroundColor": "#101923"
+        }
+      },
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "VALORANT / PERSONAL ASSISTANT",
+            "size": "xxs",
+            "color": "#FF4655",
+            "wrap": true,
+            "weight": "bold"
+          },
+          {
+            "type": "text",
+            "text": "特戰英豪 · 指令中心",
+            "size": "xl",
+            "color": "#F1F5F9",
+            "wrap": true,
+            "weight": "bold",
+            "margin": "md"
+          }
+        ]
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "點選卡片即可查詢",
+            "size": "sm",
+            "color": "#A5B4C3",
+            "wrap": true
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "商店",
+                    "size": "lg",
+                    "color": "#F1F5F9",
+                    "wrap": true,
+                    "weight": "bold"
+                  },
+                  {
+                    "type": "text",
+                    "text": "今日造型",
+                    "size": "xs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  }
+                ],
+                "flex": 1,
+                "paddingAll": "12px",
+                "backgroundColor": "#1B2935",
+                "cornerRadius": "12px",
+                "action": {
+                  "type": "message",
+                  "label": "商店",
+                  "text": "商店"
+                }
+              },
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "夜市",
+                    "size": "lg",
+                    "color": "#F1F5F9",
+                    "wrap": true,
+                    "weight": "bold"
+                  },
+                  {
+                    "type": "text",
+                    "text": "限定折扣",
+                    "size": "xs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  }
+                ],
+                "flex": 1,
+                "paddingAll": "12px",
+                "backgroundColor": "#1B2935",
+                "cornerRadius": "12px",
+                "action": {
+                  "type": "message",
+                  "label": "夜市",
+                  "text": "夜市"
+                }
+              }
+            ],
+            "spacing": "md"
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "配件",
+                    "size": "lg",
+                    "color": "#F1F5F9",
+                    "wrap": true,
+                    "weight": "bold"
+                  },
+                  {
+                    "type": "text",
+                    "text": "每週精選",
+                    "size": "xs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  }
+                ],
+                "flex": 1,
+                "paddingAll": "12px",
+                "backgroundColor": "#1B2935",
+                "cornerRadius": "12px",
+                "action": {
+                  "type": "message",
+                  "label": "配件",
+                  "text": "配件"
+                }
+              },
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "錢包",
+                    "size": "lg",
+                    "color": "#F1F5F9",
+                    "wrap": true,
+                    "weight": "bold"
+                  },
+                  {
+                    "type": "text",
+                    "text": "VP / RP / KC",
+                    "size": "xs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  }
+                ],
+                "flex": 1,
+                "paddingAll": "12px",
+                "backgroundColor": "#1B2935",
+                "cornerRadius": "12px",
+                "action": {
+                  "type": "message",
+                  "label": "錢包",
+                  "text": "錢包"
+                }
+              }
+            ],
+            "spacing": "md"
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "戰績",
+                    "size": "lg",
+                    "color": "#F1F5F9",
+                    "wrap": true,
+                    "weight": "bold"
+                  },
+                  {
+                    "type": "text",
+                    "text": "最近一場",
+                    "size": "xs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  }
+                ],
+                "flex": 1,
+                "paddingAll": "12px",
+                "backgroundColor": "#1B2935",
+                "cornerRadius": "12px",
+                "action": {
+                  "type": "message",
+                  "label": "戰績",
+                  "text": "戰績"
+                }
+              },
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "牌位",
+                    "size": "lg",
+                    "color": "#F1F5F9",
+                    "wrap": true,
+                    "weight": "bold"
+                  },
+                  {
+                    "type": "text",
+                    "text": "段位與 RR",
+                    "size": "xs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  }
+                ],
+                "flex": 1,
+                "paddingAll": "12px",
+                "backgroundColor": "#1B2935",
+                "cornerRadius": "12px",
+                "action": {
+                  "type": "message",
+                  "label": "牌位",
+                  "text": "牌位"
+                }
+              }
+            ],
+            "spacing": "md"
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "任務",
+                    "size": "lg",
+                    "color": "#F1F5F9",
+                    "wrap": true,
+                    "weight": "bold"
+                  },
+                  {
+                    "type": "text",
+                    "text": "本期目標",
+                    "size": "xs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  }
+                ],
+                "flex": 1,
+                "paddingAll": "12px",
+                "backgroundColor": "#1B2935",
+                "cornerRadius": "12px",
+                "action": {
+                  "type": "message",
+                  "label": "任務",
+                  "text": "任務"
+                }
+              },
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "通行證",
+                    "size": "lg",
+                    "color": "#F1F5F9",
+                    "wrap": true,
+                    "weight": "bold"
+                  },
+                  {
+                    "type": "text",
+                    "text": "等級與獎勵",
+                    "size": "xs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  }
+                ],
+                "flex": 1,
+                "paddingAll": "12px",
+                "backgroundColor": "#1B2935",
+                "cornerRadius": "12px",
+                "action": {
+                  "type": "message",
+                  "label": "通行證",
+                  "text": "通行證"
+                }
+              }
+            ],
+            "spacing": "md"
+          }
+        ],
+        "spacing": "md",
+        "paddingAll": "20px"
+      }
+    }
+  },
+  {
+    "type": "flex",
+    "altText": "Valorant Flex 示範",
+    "contents": {
+      "type": "carousel",
+      "contents": [
+        {
+          "type": "bubble",
+          "size": "mega",
+          "styles": {
+            "body": {
+              "backgroundColor": "#101923"
+            },
+            "header": {
+              "backgroundColor": "#101923"
+            }
+          },
+          "header": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "VALORANT / PERSONAL ASSISTANT",
+                "size": "xxs",
+                "color": "#FF4655",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "每日商店 · 示範價格",
+                "size": "xl",
+                "color": "#F1F5F9",
+                "wrap": true,
+                "weight": "bold",
+                "margin": "md"
+              }
+            ]
+          },
+          "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "凌空之志 奧丁",
+                "size": "lg",
+                "color": "#F1F5F9",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "1,775 VP",
+                "size": "xxl",
+                "color": "#FF4655",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "更新倒數 20 小時 0 分",
+                "size": "xs",
+                "color": "#A5B4C3",
+                "wrap": true
+              }
+            ],
+            "spacing": "md",
+            "paddingAll": "20px"
+          },
+          "hero": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "image",
+                "url": "https://media.valorant-api.com/weaponskinchromas/092a25a4-422f-f577-37ac-26a5d489c155/fullrender.png",
+                "size": "full",
+                "aspectMode": "fit",
+                "aspectRatio": "16:9"
+              }
+            ],
+            "paddingAll": "16px",
+            "backgroundColor": "#1B2935"
+          }
+        },
+        {
+          "type": "bubble",
+          "size": "mega",
+          "styles": {
+            "body": {
+              "backgroundColor": "#101923"
+            },
+            "header": {
+              "backgroundColor": "#101923"
+            }
+          },
+          "header": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "VALORANT / PERSONAL ASSISTANT",
+                "size": "xxs",
+                "color": "#FF4655",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "每日商店 · 示範價格",
+                "size": "xl",
+                "color": "#F1F5F9",
+                "wrap": true,
+                "weight": "bold",
+                "margin": "md"
+              }
+            ]
+          },
+          "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "異星獵人 奧丁",
+                "size": "lg",
+                "color": "#F1F5F9",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "1,775 VP",
+                "size": "xxl",
+                "color": "#FF4655",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "更新倒數 20 小時 0 分",
+                "size": "xs",
+                "color": "#A5B4C3",
+                "wrap": true
+              }
+            ],
+            "spacing": "md",
+            "paddingAll": "20px"
+          },
+          "hero": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "image",
+                "url": "https://media.valorant-api.com/weaponskinchromas/3cc39f94-443e-e0e1-39be-21a9c9f3b0aa/fullrender.png",
+                "size": "full",
+                "aspectMode": "fit",
+                "aspectRatio": "16:9"
+              }
+            ],
+            "paddingAll": "16px",
+            "backgroundColor": "#1B2935"
+          }
+        },
+        {
+          "type": "bubble",
+          "size": "mega",
+          "styles": {
+            "body": {
+              "backgroundColor": "#101923"
+            },
+            "header": {
+              "backgroundColor": "#101923"
+            }
+          },
+          "header": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "VALORANT / PERSONAL ASSISTANT",
+                "size": "xxs",
+                "color": "#FF4655",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "每日商店 · 示範價格",
+                "size": "xl",
+                "color": "#F1F5F9",
+                "wrap": true,
+                "weight": "bold",
+                "margin": "md"
+              }
+            ]
+          },
+          "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "海洋星球 奧丁",
+                "size": "lg",
+                "color": "#F1F5F9",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "1,775 VP",
+                "size": "xxl",
+                "color": "#FF4655",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "更新倒數 20 小時 0 分",
+                "size": "xs",
+                "color": "#A5B4C3",
+                "wrap": true
+              }
+            ],
+            "spacing": "md",
+            "paddingAll": "20px"
+          },
+          "hero": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "image",
+                "url": "https://media.valorant-api.com/weaponskinchromas/104e376c-4313-faf7-29b9-868caa2c7e83/fullrender.png",
+                "size": "full",
+                "aspectMode": "fit",
+                "aspectRatio": "16:9"
+              }
+            ],
+            "paddingAll": "16px",
+            "backgroundColor": "#1B2935"
+          }
+        },
+        {
+          "type": "bubble",
+          "size": "mega",
+          "styles": {
+            "body": {
+              "backgroundColor": "#101923"
+            },
+            "header": {
+              "backgroundColor": "#101923"
+            }
+          },
+          "header": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "VALORANT / PERSONAL ASSISTANT",
+                "size": "xxs",
+                "color": "#FF4655",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "每日商店 · 示範價格",
+                "size": "xl",
+                "color": "#F1F5F9",
+                "wrap": true,
+                "weight": "bold",
+                "margin": "md"
+              }
+            ]
+          },
+          "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "碎心者 奧丁",
+                "size": "lg",
+                "color": "#F1F5F9",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "1,775 VP",
+                "size": "xxl",
+                "color": "#FF4655",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "更新倒數 20 小時 0 分",
+                "size": "xs",
+                "color": "#A5B4C3",
+                "wrap": true
+              }
+            ],
+            "spacing": "md",
+            "paddingAll": "20px"
+          },
+          "hero": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "image",
+                "url": "https://media.valorant-api.com/weaponskinchromas/4ea11932-4b53-3a08-d5f8-a7980ed05ed5/fullrender.png",
+                "size": "full",
+                "aspectMode": "fit",
+                "aspectRatio": "16:9"
+              }
+            ],
+            "paddingAll": "16px",
+            "backgroundColor": "#1B2935"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "flex",
+    "altText": "Valorant Flex 示範",
+    "contents": {
+      "type": "carousel",
+      "contents": [
+        {
+          "type": "bubble",
+          "size": "mega",
+          "styles": {
+            "body": {
+              "backgroundColor": "#101923"
+            },
+            "header": {
+              "backgroundColor": "#101923"
+            }
+          },
+          "header": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "VALORANT / PERSONAL ASSISTANT",
+                "size": "xxs",
+                "color": "#FF4655",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "夜市 · 示範價格",
+                "size": "xl",
+                "color": "#F1F5F9",
+                "wrap": true,
+                "weight": "bold",
+                "margin": "md"
+              }
+            ]
+          },
+          "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "凌空之志 奧丁",
+                "size": "lg",
+                "color": "#F1F5F9",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "−30%",
+                    "size": "sm",
+                    "color": "#52D8A0",
+                    "wrap": true,
+                    "weight": "bold"
+                  },
+                  {
+                    "type": "text",
+                    "text": "原價 1,775 VP",
+                    "size": "xs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  }
+                ],
+                "spacing": "md"
+              },
+              {
+                "type": "text",
+                "text": "1,243 VP",
+                "size": "xxl",
+                "color": "#FF4655",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "更新倒數 48 小時 0 分",
+                "size": "xs",
+                "color": "#A5B4C3",
+                "wrap": true
+              }
+            ],
+            "spacing": "md",
+            "paddingAll": "20px"
+          },
+          "hero": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "image",
+                "url": "https://media.valorant-api.com/weaponskinchromas/092a25a4-422f-f577-37ac-26a5d489c155/fullrender.png",
+                "size": "full",
+                "aspectMode": "fit",
+                "aspectRatio": "16:9"
+              }
+            ],
+            "paddingAll": "16px",
+            "backgroundColor": "#1B2935"
+          }
+        },
+        {
+          "type": "bubble",
+          "size": "mega",
+          "styles": {
+            "body": {
+              "backgroundColor": "#101923"
+            },
+            "header": {
+              "backgroundColor": "#101923"
+            }
+          },
+          "header": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "VALORANT / PERSONAL ASSISTANT",
+                "size": "xxs",
+                "color": "#FF4655",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "夜市 · 示範價格",
+                "size": "xl",
+                "color": "#F1F5F9",
+                "wrap": true,
+                "weight": "bold",
+                "margin": "md"
+              }
+            ]
+          },
+          "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "異星獵人 奧丁",
+                "size": "lg",
+                "color": "#F1F5F9",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "−30%",
+                    "size": "sm",
+                    "color": "#52D8A0",
+                    "wrap": true,
+                    "weight": "bold"
+                  },
+                  {
+                    "type": "text",
+                    "text": "原價 1,775 VP",
+                    "size": "xs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  }
+                ],
+                "spacing": "md"
+              },
+              {
+                "type": "text",
+                "text": "1,243 VP",
+                "size": "xxl",
+                "color": "#FF4655",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "更新倒數 48 小時 0 分",
+                "size": "xs",
+                "color": "#A5B4C3",
+                "wrap": true
+              }
+            ],
+            "spacing": "md",
+            "paddingAll": "20px"
+          },
+          "hero": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "image",
+                "url": "https://media.valorant-api.com/weaponskinchromas/3cc39f94-443e-e0e1-39be-21a9c9f3b0aa/fullrender.png",
+                "size": "full",
+                "aspectMode": "fit",
+                "aspectRatio": "16:9"
+              }
+            ],
+            "paddingAll": "16px",
+            "backgroundColor": "#1B2935"
+          }
+        },
+        {
+          "type": "bubble",
+          "size": "mega",
+          "styles": {
+            "body": {
+              "backgroundColor": "#101923"
+            },
+            "header": {
+              "backgroundColor": "#101923"
+            }
+          },
+          "header": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "VALORANT / PERSONAL ASSISTANT",
+                "size": "xxs",
+                "color": "#FF4655",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "夜市 · 示範價格",
+                "size": "xl",
+                "color": "#F1F5F9",
+                "wrap": true,
+                "weight": "bold",
+                "margin": "md"
+              }
+            ]
+          },
+          "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "海洋星球 奧丁",
+                "size": "lg",
+                "color": "#F1F5F9",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "−30%",
+                    "size": "sm",
+                    "color": "#52D8A0",
+                    "wrap": true,
+                    "weight": "bold"
+                  },
+                  {
+                    "type": "text",
+                    "text": "原價 1,775 VP",
+                    "size": "xs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  }
+                ],
+                "spacing": "md"
+              },
+              {
+                "type": "text",
+                "text": "1,243 VP",
+                "size": "xxl",
+                "color": "#FF4655",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "更新倒數 48 小時 0 分",
+                "size": "xs",
+                "color": "#A5B4C3",
+                "wrap": true
+              }
+            ],
+            "spacing": "md",
+            "paddingAll": "20px"
+          },
+          "hero": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "image",
+                "url": "https://media.valorant-api.com/weaponskinchromas/104e376c-4313-faf7-29b9-868caa2c7e83/fullrender.png",
+                "size": "full",
+                "aspectMode": "fit",
+                "aspectRatio": "16:9"
+              }
+            ],
+            "paddingAll": "16px",
+            "backgroundColor": "#1B2935"
+          }
+        },
+        {
+          "type": "bubble",
+          "size": "mega",
+          "styles": {
+            "body": {
+              "backgroundColor": "#101923"
+            },
+            "header": {
+              "backgroundColor": "#101923"
+            }
+          },
+          "header": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "VALORANT / PERSONAL ASSISTANT",
+                "size": "xxs",
+                "color": "#FF4655",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "夜市 · 示範價格",
+                "size": "xl",
+                "color": "#F1F5F9",
+                "wrap": true,
+                "weight": "bold",
+                "margin": "md"
+              }
+            ]
+          },
+          "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "碎心者 奧丁",
+                "size": "lg",
+                "color": "#F1F5F9",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "−30%",
+                    "size": "sm",
+                    "color": "#52D8A0",
+                    "wrap": true,
+                    "weight": "bold"
+                  },
+                  {
+                    "type": "text",
+                    "text": "原價 1,775 VP",
+                    "size": "xs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  }
+                ],
+                "spacing": "md"
+              },
+              {
+                "type": "text",
+                "text": "1,243 VP",
+                "size": "xxl",
+                "color": "#FF4655",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "更新倒數 48 小時 0 分",
+                "size": "xs",
+                "color": "#A5B4C3",
+                "wrap": true
+              }
+            ],
+            "spacing": "md",
+            "paddingAll": "20px"
+          },
+          "hero": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "image",
+                "url": "https://media.valorant-api.com/weaponskinchromas/4ea11932-4b53-3a08-d5f8-a7980ed05ed5/fullrender.png",
+                "size": "full",
+                "aspectMode": "fit",
+                "aspectRatio": "16:9"
+              }
+            ],
+            "paddingAll": "16px",
+            "backgroundColor": "#1B2935"
+          }
+        },
+        {
+          "type": "bubble",
+          "size": "mega",
+          "styles": {
+            "body": {
+              "backgroundColor": "#101923"
+            },
+            "header": {
+              "backgroundColor": "#101923"
+            }
+          },
+          "header": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "VALORANT / PERSONAL ASSISTANT",
+                "size": "xxs",
+                "color": "#FF4655",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "夜市 · 示範價格",
+                "size": "xl",
+                "color": "#F1F5F9",
+                "wrap": true,
+                "weight": "bold",
+                "margin": "md"
+              }
+            ]
+          },
+          "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "戰術動物 奧丁",
+                "size": "lg",
+                "color": "#F1F5F9",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "−30%",
+                    "size": "sm",
+                    "color": "#52D8A0",
+                    "wrap": true,
+                    "weight": "bold"
+                  },
+                  {
+                    "type": "text",
+                    "text": "原價 1,775 VP",
+                    "size": "xs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  }
+                ],
+                "spacing": "md"
+              },
+              {
+                "type": "text",
+                "text": "1,243 VP",
+                "size": "xxl",
+                "color": "#FF4655",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "更新倒數 48 小時 0 分",
+                "size": "xs",
+                "color": "#A5B4C3",
+                "wrap": true
+              }
+            ],
+            "spacing": "md",
+            "paddingAll": "20px"
+          },
+          "hero": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "image",
+                "url": "https://media.valorant-api.com/weaponskinchromas/1cefc3ab-4097-179d-79c3-a4a2bcdb4100/fullrender.png",
+                "size": "full",
+                "aspectMode": "fit",
+                "aspectRatio": "16:9"
+              }
+            ],
+            "paddingAll": "16px",
+            "backgroundColor": "#1B2935"
+          }
+        },
+        {
+          "type": "bubble",
+          "size": "mega",
+          "styles": {
+            "body": {
+              "backgroundColor": "#101923"
+            },
+            "header": {
+              "backgroundColor": "#101923"
+            }
+          },
+          "header": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "VALORANT / PERSONAL ASSISTANT",
+                "size": "xxs",
+                "color": "#FF4655",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "夜市 · 示範價格",
+                "size": "xl",
+                "color": "#F1F5F9",
+                "wrap": true,
+                "weight": "bold",
+                "margin": "md"
+              }
+            ]
+          },
+          "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "符文石典 奧丁",
+                "size": "lg",
+                "color": "#F1F5F9",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "−30%",
+                    "size": "sm",
+                    "color": "#52D8A0",
+                    "wrap": true,
+                    "weight": "bold"
+                  },
+                  {
+                    "type": "text",
+                    "text": "原價 1,775 VP",
+                    "size": "xs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  }
+                ],
+                "spacing": "md"
+              },
+              {
+                "type": "text",
+                "text": "1,243 VP",
+                "size": "xxl",
+                "color": "#FF4655",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "更新倒數 48 小時 0 分",
+                "size": "xs",
+                "color": "#A5B4C3",
+                "wrap": true
+              }
+            ],
+            "spacing": "md",
+            "paddingAll": "20px"
+          },
+          "hero": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "image",
+                "url": "https://media.valorant-api.com/weaponskinchromas/bf2fea95-4b73-05e3-9956-b8828a0f2edf/fullrender.png",
+                "size": "full",
+                "aspectMode": "fit",
+                "aspectRatio": "16:9"
+              }
+            ],
+            "paddingAll": "16px",
+            "backgroundColor": "#1B2935"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "flex",
+    "altText": "Valorant Flex 示範",
+    "contents": {
+      "type": "bubble",
+      "size": "mega",
+      "styles": {
+        "body": {
+          "backgroundColor": "#101923"
+        },
+        "header": {
+          "backgroundColor": "#101923"
+        }
+      },
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "VALORANT / PERSONAL ASSISTANT",
+            "size": "xxs",
+            "color": "#FF4655",
+            "wrap": true,
+            "weight": "bold"
+          },
+          {
+            "type": "text",
+            "text": "配件 · 示範價格",
+            "size": "xl",
+            "color": "#F1F5F9",
+            "wrap": true,
+            "weight": "bold",
+            "margin": "md"
+          }
+        ]
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "最佳拍檔 玩家卡面",
+            "size": "lg",
+            "color": "#F1F5F9",
+            "wrap": true,
+            "weight": "bold"
+          },
+          {
+            "type": "text",
+            "text": "4,500 KC",
+            "size": "xxl",
+            "color": "#FF4655",
+            "wrap": true,
+            "weight": "bold"
+          }
+        ],
+        "spacing": "md",
+        "paddingAll": "20px"
+      },
+      "hero": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "image",
+            "url": "https://media.valorant-api.com/playercards/1711d20d-4b1c-c64a-14be-d4ae58a457c6/largeart.png",
+            "size": "full",
+            "aspectMode": "fit",
+            "aspectRatio": "16:9"
+          }
+        ],
+        "paddingAll": "16px",
+        "backgroundColor": "#1B2935"
+      }
+    }
+  },
+  {
+    "type": "flex",
+    "altText": "Valorant Flex 示範",
+    "contents": {
+      "type": "bubble",
+      "size": "mega",
+      "styles": {
+        "body": {
+          "backgroundColor": "#101923"
+        },
+        "header": {
+          "backgroundColor": "#101923"
+        }
+      },
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "VALORANT / PERSONAL ASSISTANT",
+            "size": "xxs",
+            "color": "#FF4655",
+            "wrap": true,
+            "weight": "bold"
+          },
+          {
+            "type": "text",
+            "text": "最近一場 · 示範 competitive",
+            "size": "xl",
+            "color": "#F1F5F9",
+            "wrap": true,
+            "weight": "bold",
+            "margin": "md"
+          }
+        ]
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "蓋克",
+            "size": "lg",
+            "color": "#F1F5F9",
+            "wrap": true,
+            "weight": "bold"
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "K / D / A",
+                    "size": "xs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  },
+                  {
+                    "type": "text",
+                    "text": "24 / 15 / 7",
+                    "size": "xl",
+                    "color": "#F1F5F9",
+                    "wrap": true,
+                    "weight": "bold"
+                  }
+                ],
+                "flex": 2
+              },
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "ACS",
+                    "size": "xs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  },
+                  {
+                    "type": "text",
+                    "text": "270",
+                    "size": "xl",
+                    "color": "#FF4655",
+                    "wrap": true,
+                    "weight": "bold"
+                  }
+                ],
+                "flex": 1
+              }
+            ]
+          }
+        ],
+        "spacing": "md",
+        "paddingAll": "20px"
+      },
+      "hero": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "image",
+            "url": "https://media.valorant-api.com/maps/dd3a1cd9-41b1-50ea-3bd6-a7bb3c5978bd/splash.png",
+            "size": "full",
+            "aspectMode": "cover",
+            "aspectRatio": "16:9"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "勝利",
+                "size": "xl",
+                "color": "#52D8A0",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "13 : 9",
+                "size": "xxl",
+                "color": "#F1F5F9",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "Gauntlet",
+                "size": "sm",
+                "color": "#F1F5F9",
+                "wrap": true
+              }
+            ],
+            "position": "absolute",
+            "offsetStart": "18px",
+            "offsetTop": "18px",
+            "paddingAll": "12px",
+            "backgroundColor": "#101923DD",
+            "cornerRadius": "12px",
+            "width": "180px"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "image",
+                "url": "https://media.valorant-api.com/agents/e370fa57-4757-3604-3648-499e1f642d3f/displayicon.png",
+                "size": "full",
+                "aspectMode": "cover",
+                "aspectRatio": "1:1"
+              }
+            ],
+            "position": "absolute",
+            "offsetEnd": "18px",
+            "offsetBottom": "16px",
+            "width": "72px",
+            "height": "72px",
+            "cornerRadius": "36px",
+            "backgroundColor": "#1B2935"
+          }
+        ],
+        "height": "200px",
+        "backgroundColor": "#1B2935",
+        "paddingAll": "0px"
+      }
+    }
+  },
+  {
+    "type": "flex",
+    "altText": "Valorant Flex 示範",
+    "contents": {
+      "type": "bubble",
+      "size": "mega",
+      "styles": {
+        "body": {
+          "backgroundColor": "#101923"
+        },
+        "header": {
+          "backgroundColor": "#101923"
+        }
+      },
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "VALORANT / PERSONAL ASSISTANT",
+            "size": "xxs",
+            "color": "#FF4655",
+            "wrap": true,
+            "weight": "bold"
+          },
+          {
+            "type": "text",
+            "text": "牌位 · 示範數據",
+            "size": "xl",
+            "color": "#F1F5F9",
+            "wrap": true,
+            "weight": "bold",
+            "margin": "md"
+          }
+        ]
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "鑽石3",
+            "size": "xxl",
+            "color": "#F1F5F9",
+            "wrap": true,
+            "weight": "bold"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "RR",
+                "size": "md",
+                "color": "#F1F5F9",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "68 / 100",
+                "size": "sm",
+                "color": "#A5B4C3",
+                "wrap": true
+              },
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [],
+                    "backgroundColor": "#52D8A0",
+                    "width": "68%",
+                    "height": "6px"
+                  }
+                ],
+                "backgroundColor": "#1B2935",
+                "height": "6px",
+                "cornerRadius": "3px"
+              }
+            ],
+            "spacing": "sm",
+            "paddingAll": "12px",
+            "backgroundColor": "#1B2935",
+            "cornerRadius": "10px"
+          },
+          {
+            "type": "text",
+            "text": "最近一場 +22 RR",
+            "size": "md",
+            "color": "#52D8A0",
+            "wrap": true
+          }
+        ],
+        "spacing": "md",
+        "paddingAll": "20px"
+      },
+      "hero": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "image",
+            "url": "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/20/largeicon.png",
+            "size": "md",
+            "aspectMode": "fit",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "#1B2935",
+        "paddingAll": "20px"
+      }
+    }
+  },
+  {
+    "type": "flex",
+    "altText": "Valorant Flex 示範",
+    "contents": {
+      "type": "bubble",
+      "size": "mega",
+      "styles": {
+        "body": {
+          "backgroundColor": "#101923"
+        },
+        "header": {
+          "backgroundColor": "#101923"
+        }
+      },
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "VALORANT / PERSONAL ASSISTANT",
+            "size": "xxs",
+            "color": "#FF4655",
+            "wrap": true,
+            "weight": "bold"
+          },
+          {
+            "type": "text",
+            "text": "任務 · 示範數據",
+            "size": "xl",
+            "color": "#F1F5F9",
+            "wrap": true,
+            "weight": "bold",
+            "margin": "md"
+          }
+        ]
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "造成傷害",
+                "size": "md",
+                "color": "#F1F5F9",
+                "wrap": true,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "12,500 / 18,000",
+                "size": "sm",
+                "color": "#A5B4C3",
+                "wrap": true
+              },
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [],
+                    "backgroundColor": "#52D8A0",
+                    "width": "69%",
+                    "height": "6px"
+                  }
+                ],
+                "backgroundColor": "#1B2935",
+                "height": "6px",
+                "cornerRadius": "3px"
+              }
+            ],
+            "spacing": "sm",
+            "paddingAll": "12px",
+            "backgroundColor": "#1B2935",
+            "cornerRadius": "10px"
+          },
+          {
+            "type": "text",
+            "text": "獎勵 12,000 XP",
+            "size": "sm",
+            "color": "#FF4655",
+            "wrap": true
+          }
+        ],
+        "spacing": "md",
+        "paddingAll": "20px"
+      }
+    }
+  }
+]
