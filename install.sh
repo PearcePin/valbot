@@ -6,11 +6,15 @@ for tool in git python3; do
     command -v "$tool" >/dev/null || { echo "Missing $tool. Ubuntu: sudo apt install git python3 python3-venv cron" >&2; exit 1; }
 done
 python3 -c 'import sys; assert sys.version_info >= (3, 11), "Python 3.11+ required"'
-if [[ -e "$TARGET" ]]; then
+if [[ "${1:-}" == "--local" ]]; then
+    TARGET="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+    [[ -f "$TARGET/setup.py" && -f "$TARGET/requirements.txt" ]] || { echo "Invalid local project" >&2; exit 1; }
+elif [[ -e "$TARGET" ]]; then
     echo "Destination already exists: $TARGET. Choose VALBOT_INSTALL_DIR or run its setup.py." >&2
     exit 1
+else
+    git clone -- "$REPO_URL" "$TARGET"
 fi
-git clone -- "$REPO_URL" "$TARGET"
 cd "$TARGET"
 python3 -m venv .venv
 .venv/bin/python -m pip install --upgrade pip

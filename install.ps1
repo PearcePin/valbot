@@ -1,10 +1,14 @@
 param(
     [string]$Repository = 'https://github.com/PearcePin/valbot.git',
-    [string]$Destination = (Join-Path $env:USERPROFILE 'valbot')
+    [string]$Destination = (Join-Path $env:USERPROFILE 'valbot'),
+    [switch]$Local
 )
 $ErrorActionPreference = 'Stop'
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) { throw 'Install Git for Windows first.' }
-if (Test-Path -LiteralPath $Destination) { throw "Destination already exists: $Destination" }
+if ($Local) {
+    $Destination = $PSScriptRoot
+    if (-not (Test-Path -LiteralPath (Join-Path $Destination 'setup.py'))) { throw 'Invalid local project.' }
+} elseif (Test-Path -LiteralPath $Destination) { throw "Destination already exists: $Destination" }
 if (Get-Command py -ErrorAction SilentlyContinue) {
     $PythonCommand = 'py'
     $PythonArgs = @('-3')
@@ -14,8 +18,10 @@ if (Get-Command py -ErrorAction SilentlyContinue) {
 } else { throw 'Install Python 3.11+ first (enable Add Python to PATH).' }
 & $PythonCommand @PythonArgs -c 'import sys; assert sys.version_info >= (3,11), "Python 3.11+ required"'
 if ($LASTEXITCODE -ne 0) { throw 'Python 3.11+ is required.' }
-git clone -- $Repository $Destination
-if ($LASTEXITCODE -ne 0) { throw 'Git clone failed. Check repository access.' }
+if (-not $Local) {
+    git clone -- $Repository $Destination
+    if ($LASTEXITCODE -ne 0) { throw 'Git clone failed. Check repository access.' }
+}
 Push-Location -LiteralPath $Destination
 try {
     & $PythonCommand @PythonArgs -m venv .venv

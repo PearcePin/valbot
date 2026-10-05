@@ -19,21 +19,33 @@
 
 ## 一行指令安裝
 
-先安裝 **Git、Python 3.11+**；Ubuntu 另需 `python3-venv`、`cron` 並啟動 cron 服務。腳本下載位置須能讀取此 GitHub 儲存庫；私人 repo 需先設定 Git 認證，raw 下載也需授權。
+先安裝 **Git、Python 3.11+**；Ubuntu 另需 `python3-venv`、`cron` 並啟動 cron 服務。以下透過 Git 下載，支援已登入的私人儲存庫；私人 repo 需先完成 GitHub／Git Credential Manager 認證。
 
 Linux：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/PearcePin/valbot/main/install.sh | bash
+git clone https://github.com/PearcePin/valbot.git "$HOME/valbot" && bash "$HOME/valbot/install.sh" --local
 ```
 
 Windows PowerShell：
 
 ```powershell
+git clone https://github.com/PearcePin/valbot.git "$env:USERPROFILE\valbot"; if ($LASTEXITCODE -eq 0) { powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\valbot\install.ps1" -Local }
+```
+
+預設安裝至使用者家目錄 `valbot`，若目錄已存在，clone 會停止。可修改 clone 的目的目錄及後面的腳本路徑。`--local`／`-Local` 使用已下載專案；腳本可先開啟檢視。
+
+若儲存庫開放公開讀取，也可直接下載安裝器，由它自動 clone：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/PearcePin/valbot/main/install.sh | bash
+```
+
+```powershell
 & ([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://raw.githubusercontent.com/PearcePin/valbot/main/install.ps1').Content))
 ```
 
-預設安裝至使用者家目錄 `valbot`，若目錄已存在會停止，避免覆蓋。Linux 可透過 `VALBOT_INSTALL_DIR` 指定目錄；PowerShell 可在上述指令尾端加入 `-Destination 'C:\Tools\valbot'`。下載即執行的腳本可先開啟檢視。
+直接下載模式的自訂目錄：Linux 設定 `VALBOT_INSTALL_DIR`；PowerShell 加入 `-Destination 'C:\Tools\valbot'`。未授權的私人 repo raw URL 會回傳 404，請使用上方 Git 安裝指令。
 
 已 clone 者直接執行：
 
