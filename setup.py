@@ -1,5 +1,6 @@
 """Interactive configuration wizard (not a setuptools package installer)."""
 import argparse
+import os
 from datetime import datetime
 from getpass import getpass
 import re
@@ -32,6 +33,8 @@ def main():
     parser.add_argument("--no-schedule", action="store_true")
     parser.add_argument("--schedule-only", action="store_true")
     parser.add_argument("--legacy-auth", action="store_true", help="舊版 Riot 帳密驗證協定（相容用途）")
+    parser.add_argument("--login-method", choices=["local", "browser", "password"],
+                        help="指定登入方式；Windows 推薦 local，不需 ssid 或貼網址")
     args = parser.parse_args()
     print("Valorant LINE Bot · 設定精靈（密碼不會保存）")
     vault = Vault()
@@ -50,7 +53,27 @@ def configure(vault, staged_vault, args):
     while region not in SHARDS:
         region = required("請選擇 AP/NA/EU/KR/BR/LATAM：").lower()
     auth = RiotAuth(staged_vault)
-    mode = input("登入方式 [1 帳密 / 2 瀏覽器]（預設 1）：").strip() or "1"
+    default = "3" if os.name == "nt" else "2"
+    mode = {"local": "3", "browser": "2", "password": "1"}.get(args.login_method)
+    while mode not in {"1", "2", "3"}:
+        mode = input("登入方式 [1 帳密 / 2 瀏覽器 / 3 已登入的 Riot Client（Windows 推薦）]"
+                     f"（預設 {default}）：").strip() or default
+    if mode == "3":
+        print("請先開啟 Riot Client，登入自己的帳號並啟動 VALORANT 到主選單。")
+        print("此模式自動讀取本機登入，不需要輸入密碼、ssid 或網址。每日推播時 Riot Client 也需保持登入並開啟。")
+        while True:
+            try:
+                auth.import_local()
+                print("已讀取本機 Riot Client 登入。")
+                break
+            except AuthError as exc:
+                print(str(exc))
+                choice = input("開啟並登入後按 Enter 重試；輸入 2 改用瀏覽器；輸入 q 離開：").strip().lower()
+                if choice == "q":
+                    return 1
+                if choice == "2":
+                    mode = "2"
+                    break
     if mode == "1":
         username = required("Riot 登入帳號（不是顯示名稱）：")
         password = required("Riot 密碼：", secret=True)
@@ -63,17 +86,54 @@ def configure(vault, staged_vault, args):
         finally:
             del password
     if mode == "2":
-        print("請在瀏覽器完成 Riot 登入與 2FA，然後複製跳轉後的完整網址（含 #access_token）。")
+        print("瀏覽器登入：完成 Riot 登入與 2FA 後，推薦只複製 ssid，不必搶著複製跳轉網址。")
         print(LOGIN_URL)
         webbrowser.open(LOGIN_URL)
-        uri = required("登入完成網址（隱藏輸入）：", secret=True)
-        print("若要無人值守更新：從 auth.riotgames.com 的瀏覽器 Cookie 複製 ssid；它等同登入憑證。")
-        ssid = getpass("ssid（隱藏輸入，可空白；空白時約一小時後需重新登入）：").strip()
-        auth.import_browser(uri, ssid)
-        if ssid:
-            auth.session(force=True)
-    elif mode != "1":
-        raise RuntimeError("不支援的登入方式。")
+        browser_method = input("[1 ssid 登入（推薦，可自動更新） / 2 貼上含 access_token 的網址]（預設 1）：").strip() or "1"
+        if browser_method == "1":
+            print("1. 在剛開啟的瀏覽器完成 Riot 登入與 2FA。")
+            input("完成登入後按 Enter，我會開啟 Cookie 檢視用的網頁：")
+            webbrowser.open("https://auth.riotgames.com/")
+            print("2. 在這個 auth.riotgames.com 分頁按 F12（或 Ctrl+Shift+I）；顯示 404 也沒關係。")
+            print("3. Chrome/Edge：選 Application（應用程式，若沒看到按上方 >>）。")
+            print("   左側 Storage（儲存空間）→ Cookies → https://auth.riotgames.com。")
+            print("   Firefox：選 Storage（儲存空間）→ Cookies → https://auth.riotgames.com。")
+            print("4. 找 Name 為 ssid 的那一列；雙擊 Value（值）欄位，複製完整值。")
+            print("   不是 Wi-Fi 的 SSID，不要複製 Name、整列或其他網站的 Cookie。")
+            print("   找不到 ssid：確認登入與檢視 Cookie 使用同一個瀏覽器／設定檔，且已完成 2FA。")
+            print("詳細步驟見 docs/login.md。ssid 等同登入憑證，請勿貼到聊天或 GitHub。")
+            while True:
+                ssid = required("貼上 ssid 的 Value（隱藏輸入；q 離開）：", secret=True).strip()
+                if ssid.lower() == "q":
+                    return 1
+                try:
+                    auth.import_ssid(ssid)
+                    break
+                except (AuthError, httpx.HTTPError) as exc:
+                    print(str(exc) if isinstance(exc, AuthError) else "Riot 連線失敗，請稍後重試。")
+                    print("尚未保存設定，可重新複製 ssid 再試，不需要重新輸入其他資料。")
+        elif browser_method == "2":
+            print("帳號管理頁／一般首頁不是登入憑證。完整網址需包含 #access_token=...。")
+            print("例如：https://playvalorant.com/opt_in#access_token=...&id_token=...&expires_in=3600")
+            print("網址會先驗證成功再詢問 ssid；格式有誤可原地重試。")
+            while True:
+                uri = required("登入完成網址（隱藏輸入；q 離開）：", secret=True).strip()
+                if uri.lower() == "q":
+                    return 1
+                try:
+                    auth.import_browser(uri)
+                    break
+                except (AuthError, httpx.HTTPError) as exc:
+                    print(str(exc) if isinstance(exc, AuthError) else "Riot 連線失敗，請稍後重試。")
+            print("網址模式憑證通常僅約一小時有效；每日排程需 ssid 或 Windows Riot Client 模式。")
+            ssid = getpass("ssid 的 Value（可空白；取得步驟見 docs/login.md）：").strip()
+            if ssid:
+                before = staged_vault.read("session")["puuid"]
+                updated = auth.import_ssid(ssid)
+                if before != updated["puuid"]:
+                    raise AuthError("網址與 ssid 屬於不同 Riot 帳號，請重新設定並使用同一個帳號。")
+        else:
+            raise AuthError("請選擇 1（ssid）或 2（網址）。")
     config = {"region": region, "line_access_token": required("LINE Channel Access Token：", secret=True),
               "line_channel_secret": required("LINE Channel Secret（Webhook 簽章驗證必要）：", secret=True),
               "line_user_id": required("LINE User ID（U 開頭）：")}

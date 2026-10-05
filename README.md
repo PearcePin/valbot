@@ -68,7 +68,7 @@ py -3 -m venv .venv
 1. 建立 [LINE 官方帳號](https://manager.line.biz/)，在設定中啟用 Messaging API。
 2. 至 [LINE Developers Console](https://developers.line.biz/console/) 的 Messaging API Channel，發行 **Channel access token（long-lived）**。
 3. 在 Basic settings 找到 **Channel secret** 與 **Your user ID**；手機將 Bot 加為好友。
-4. 精靈依序輸入區域、Riot 登入帳號、隱藏密碼／2FA、Access Token、Channel Secret、User ID。會測試商店、Token、收件人並傳送功能選單，成功才保存 LINE 設定與註冊排程。
+4. 精靈輸入區域後選擇 Riot 登入方式；**Windows 推薦先登入 Riot Client 並進入遊戲，選本機模式，不需輸入密碼、ssid 或網址**。再輸入 Access Token、Channel Secret、User ID。會測試商店、Token、收件人並傳送功能選單，成功才保存 LINE 設定與註冊排程。
 
 Channel Secret 是 Webhook 驗證所必需，與 Access Token 不同。LINE 額度與封鎖好友狀態會影響推播。
 
@@ -76,7 +76,11 @@ Channel Secret 是 Webhook 驗證所必需，與 Access Token 不同。LINE 額�
 
 商店、餘額、任務使用遊戲的**非官方私有端點**，並非 Riot 正式開放的商店 API。Riot 可能調整登入、要求 CAPTCHA 或封鎖直接帳密登入；程式不會繞過驗證。帳密模式支援最多三次 2FA，失敗時切換瀏覽器模式。預設使用新版 `riot_identity`／`multifactor.otp` 欄位，舊協定可用 `setup.py --legacy-auth`。
 
-瀏覽器模式在 Riot 網頁完成登入及 2FA，貼上 `https://playvalorant.com/opt_in#access_token=...` 的完整跳轉網址（隱藏輸入）。若需排程自動更新，開啟瀏覽器開發者工具的 Application／Storage → Cookies → `https://auth.riotgames.com`，複製自己的 **ssid** 至精靈。提供 ssid 會立即測試更新。沒有 ssid 的 token 通常約一小時有效，**不適合每日無人值守排程**。Cookie 也可能失效；重新執行 `setup.py` 登入即可。不要分享跳轉網址、Cookie 或 Token。
+**登入步驟與 ssid 具體位置：[docs/login.md](docs/login.md)。** Windows 可執行 `python setup.py --login-method local` 自動讀取自己的 Riot Client 登入；每日推播時 Client 需保持登入並開啟，token 過期會重新向本機 Client 取得，不需要 Cookie。切換 Riot 帳號時會拒絕沿用別人的工作階段。
+
+瀏覽器模式預設只需 **ssid**，不必貼跳轉網址。完成網頁登入／2FA 後，精靈會引導開啟 `https://auth.riotgames.com/` 分頁（即使 404 仍可檢視 Cookie），按 F12 → Application（應用程式）→ Storage → Cookies → `https://auth.riotgames.com`，複製 Name 為 **ssid** 那列的 **Value**。這不是 Wi-Fi SSID。輸入後立即向 Riot 測試登入；失敗可原地重試。
+
+進階網址模式支援含 `access_token` 的 playvalorant.com 跳轉網址（含 www／語言路徑／結尾斜線），驗證成功才詢問可選的 ssid。沒有 ssid 的網址 token 通常約一小時有效，**不適合每日無人值守排程**。Cookie 也可能失效；重新執行 `setup.py` 登入即可。不要分享跳轉網址、Cookie 或 Token。
 
 圖片與繁體中文 UUID 資料來自 [Valorant-API](https://valorant-api.com/)。公開圖庫可能落後最新版本；未知圖片或價格會明示未提供，不推算虛假資訊。任務可能只回傳週任務，遊戲內每日 checkpoints 不保證有提供。通行證依本期 Season 關聯識別，圖庫落後時顯示尚未提供。
 

@@ -1,6 +1,10 @@
 from __future__ import annotations
 
 import time
+import base64
+import json
+import os
+from pathlib import Path
 from urllib.parse import parse_qs, urlencode, urlsplit
 
 import httpx
@@ -27,15 +31,55 @@ def json_response(response: httpx.Response) -> dict:
 
 
 def token_from_url(uri: str) -> dict:
+    uri = uri.strip().strip('\"\'')
     parsed = urlsplit(uri)
-    if parsed.scheme != "https" or parsed.hostname != "playvalorant.com" or parsed.path != "/opt_in":
-        raise AuthError("請貼上 Riot 登入完成後 playvalorant.com/opt_in 的完整網址。")
-    fields = parse_qs(parsed.fragment)
+    if parsed.scheme != "https" or parsed.hostname not in {"playvalorant.com", "www.playvalorant.com"}:
+        raise AuthError("這不是 Riot 登入跳轉後的 playvalorant.com 網址。帳號管理頁或原本的登入網址不能當作憑證。")
+    fields = {**parse_qs(parsed.query), **parse_qs(parsed.fragment)}
     if not fields.get("access_token"):
-        raise AuthError("網址沒有 access_token；請重新完成 Riot 登入。")
+        raise AuthError("這個網址沒有 access_token。請用精靈開啟的連結登入，完成後立刻複製含 #access_token= 的網址；"
+                        "若瀏覽器已清除該片段，請改用 ssid 或 Windows Riot Client 登入。")
+    try:
+        expires_in = int(fields.get("expires_in", ["3600"])[0])
+        if not 0 < expires_in <= 86400:
+            raise ValueError
+    except ValueError as exc:
+        raise AuthError("登入網址的有效時間格式錯誤，請重新複製完整網址。") from exc
     return {"access_token": fields["access_token"][0],
             "id_token": fields.get("id_token", [""])[0],
-            "expires_at": time.time() + int(fields.get("expires_in", ["3600"])[0])}
+            "expires_at": time.time() + expires_in}
+
+
+def local_session() -> dict:
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    if os.name != "nt" or not local_app_data:
+        raise AuthError("Riot Client 登入僅支援 Windows；Ubuntu 請選擇瀏覽器 ssid 模式。")
+    lockfile = Path(local_app_data) / "Riot Games" / "Riot Client" / "Config" / "lockfile"
+    try:
+        _, _, port, password, protocol = lockfile.read_text(encoding="utf-8").strip().split(":")
+        if protocol != "https" or not 1 <= int(port) <= 65535:
+            raise ValueError
+    except (OSError, ValueError) as exc:
+        raise AuthError("找不到可用的 Riot Client。請先開啟 Riot Client、登入並啟動 VALORANT 到主選單，保持開啟後重試。") from exc
+    try:
+        # Riot Client's self-signed TLS is allowed ONLY on this fixed loopback URL.
+        # Never send the lockfile credential through system proxies or remote redirects.
+        with httpx.Client(verify=False, trust_env=False, timeout=10, follow_redirects=False) as client:
+            response = client.get(f"https://127.0.0.1:{port}/entitlements/v1/token", auth=("riot", password))
+            result = json_response(response)
+    except httpx.HTTPError as exc:
+        raise AuthError("無法連線本機 Riot Client。請保持 Riot Client 與遊戲開啟，登入完成後重試。") from exc
+    if not all(result.get(key) for key in ("accessToken", "token", "subject")):
+        raise AuthError("Riot Client 尚未完成登入，請先進入 VALORANT 主選單再重試。")
+    try:
+        payload = result["accessToken"].split(".")[1]
+        expiry = float(json.loads(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4)))["exp"])
+    except (ValueError, KeyError, IndexError, TypeError):
+        expiry = time.time() + 300
+    if expiry <= time.time():
+        raise AuthError("Riot Client 憑證已過期，請在 Riot Client 重新登入後重試。")
+    return {"access_token": result["accessToken"], "entitlements_token": result["token"],
+            "puuid": result["subject"], "expires_at": expiry, "source": "local", "cookies": []}
 
 
 class RiotAuth:
@@ -69,7 +113,8 @@ class RiotAuth:
     def redirect_uri(self, client: httpx.Client, uri: str) -> str:
         for _ in range(8):
             parsed = urlsplit(uri)
-            if parsed.hostname == "playvalorant.com" and "access_token=" in parsed.fragment:
+            fields = {**parse_qs(parsed.query), **parse_qs(parsed.fragment)}
+            if parsed.hostname in {"playvalorant.com", "www.playvalorant.com"} and fields.get("access_token"):
                 return uri
             if parsed.scheme != "https" or parsed.hostname not in {
                 "auth.riotgames.com", "authenticate.riotgames.com"}:
@@ -115,6 +160,19 @@ class RiotAuth:
                 client.cookies.set("ssid", ssid, domain="auth.riotgames.com", path="/")
             return self.finish(client, uri)
 
+    def import_ssid(self, ssid: str) -> dict:
+        ssid = ssid.strip()
+        if not ssid or any(char in ssid for char in "\r\n;"):
+            raise AuthError("請只複製 ssid 那一列的 Value，不是整列或整段 Cookie。")
+        with self.client() as client:
+            client.cookies.set("ssid", ssid, domain="auth.riotgames.com", path="/")
+            return self.finish(client, self.redirect_uri(client, LOGIN_URL))
+
+    def import_local(self) -> dict:
+        session = local_session()
+        self.vault.write("session", session)
+        return session
+
     def session(self, force=False) -> dict:
         with self.vault.lock("auth"):
             session = self.vault.read("session")
@@ -122,6 +180,12 @@ class RiotAuth:
                 raise AuthError("尚未登入 Riot，請執行 setup.py。")
             if not force and session["expires_at"] > time.time() + 90:
                 return session
+            if session.get("source") == "local":
+                updated = local_session()
+                if updated["puuid"] != session["puuid"]:
+                    raise AuthError("Riot Client 已切換至另一個帳號，請切回原帳號或重新設定 Bot。")
+                self.vault.write("session", updated)
+                return updated
             if not session.get("cookies"):
                 raise AuthError("Riot 憑證已過期；瀏覽器模式需提供 ssid 才能自動更新，請重新設定。")
             with self.client(session["cookies"]) as client:

@@ -18,6 +18,84 @@ def test_token_requires_correct_redirect():
     assert time.time() < token["expires_at"] <= time.time() + 60
 
 
+@pytest.mark.parametrize("url", [
+    " https://playvalorant.com/opt_in/#access_token=abc&expires_in=60 ",
+    "https://www.playvalorant.com/zh-tw/opt_in#access_token=abc&expires_in=60",
+    "https://playvalorant.com/zh-tw/?access_token=abc&expires_in=60",
+])
+def test_browser_callback_variants(url):
+    assert token_from_url(url)["access_token"] == "abc"
+
+
+def test_missing_token_error_explains_alternatives():
+    with pytest.raises(AuthError, match="ssid"):
+        token_from_url("https://playvalorant.com/zh-tw/")
+    with pytest.raises(AuthError, match="有效時間"):
+        token_from_url("https://playvalorant.com/opt_in#access_token=abc&expires_in=bad")
+
+
+def test_ssid_login_does_not_require_pasted_callback(tmp_path):
+    auth = RiotAuth(Vault(tmp_path))
+    cookies_seen = []
+
+    def handler(request):
+        if request.url.path == "/authorize":
+            cookies_seen.append(request.headers.get("cookie", ""))
+            return httpx.Response(302, headers={"location":
+                "https://playvalorant.com/opt_in#access_token=abc&expires_in=3600"})
+        if request.url.path == "/userinfo":
+            return httpx.Response(200, json={"sub": "owner"})
+        return httpx.Response(200, json={"entitlements_token": "ent"})
+
+    auth.client = lambda cookies=(): httpx.Client(transport=httpx.MockTransport(handler))
+    assert auth.import_ssid("private-cookie")["puuid"] == "owner"
+    assert cookies_seen == ["ssid=private-cookie"]
+    assert auth.vault.read("session")["cookies"][0]["value"] == "private-cookie"
+
+
+def test_local_client_refresh_never_changes_account(tmp_path, monkeypatch):
+    import valbot.auth as auth_module
+    vault = Vault(tmp_path)
+    auth = RiotAuth(vault)
+    original = {"source": "local", "puuid": "owner", "expires_at": 0, "cookies": []}
+    vault.write("session", original)
+    monkeypatch.setattr(auth_module, "local_session", lambda: {**original, "puuid": "other"})
+    with pytest.raises(AuthError, match="另一個帳號"):
+        auth.session()
+    assert vault.read("session")["puuid"] == "owner"
+    monkeypatch.setattr(auth_module, "local_session", lambda: {**original, "expires_at": time.time() + 3600})
+    assert auth.session()["expires_at"] > time.time()
+
+
+def test_local_client_credentials_only_go_to_loopback(tmp_path, monkeypatch):
+    import valbot.auth as auth_module
+    from types import SimpleNamespace
+    import base64
+    import json
+    folder = tmp_path / "Riot Games" / "Riot Client" / "Config"
+    folder.mkdir(parents=True)
+    (folder / "lockfile").write_text("RiotClient:123:45678:local-only-password:https")
+    monkeypatch.setattr(auth_module, "os", SimpleNamespace(name="nt", environ={"LOCALAPPDATA": str(tmp_path)}))
+    payload = base64.urlsafe_b64encode(json.dumps({"exp": time.time() + 3600}).encode()).decode().rstrip("=")
+    real_client = httpx.Client
+    seen = []
+
+    def handler(request):
+        seen.append(request)
+        return httpx.Response(200, json={"accessToken": "header." + payload + ".signature",
+                                        "token": "ent", "subject": "owner"})
+
+    def client(**kwargs):
+        assert kwargs["trust_env"] is False
+        assert kwargs["follow_redirects"] is False
+        return real_client(transport=httpx.MockTransport(handler), **kwargs)
+
+    monkeypatch.setattr(auth_module.httpx, "Client", client)
+    assert auth_module.local_session()["puuid"] == "owner"
+    assert str(seen[0].url) == "https://127.0.0.1:45678/entitlements/v1/token"
+    assert seen[0].headers["Authorization"].startswith("Basic ")
+
+
 def test_mfa_retry_and_password_not_saved(tmp_path):
     requests = []
     attempts = 0
