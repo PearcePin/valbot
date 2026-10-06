@@ -37,7 +37,7 @@ def main():
                         help="指定登入方式；Windows 推薦 local，不需 ssid 或貼網址")
     parser.add_argument("--check-browser-url", action="store_true", help="只診斷瀏覽器網址與 Riot token，不改設定")
     args = parser.parse_args()
-    print("Valorant LINE Bot · 設定精靈 v2（支援網址診斷；密碼不會保存）")
+    print("Valorant LINE Bot · 設定精靈（密碼不會保存；詳細說明 docs/install.md）")
     vault = Vault()
     if args.schedule_only:
         if not vault.read("config"):
@@ -135,7 +135,7 @@ def configure(vault, staged_vault, args):
                         browser_method = choice
                         break
         if browser_method == "3":
-            print("在已登入的瀏覽器按 F12 → Network（網路）→ 勾 Preserve log（保留紀錄）。")
+            print("在已登入的瀏覽器按 F12 → Network（網路）→ 勾 Preserve log／Keep log（保留紀錄）。")
             print("重新開啟上方登入連結，找到 Request URL 為 https://auth.riotgames.com/authorize 的請求。")
             print("在 Headers → Request Headers 中，複製 Cookie 欄位的整個值（應含 ssid=...）。")
             print("只複製這個 Riot 網域的 Cookie 欄位，不要複製所有標頭或其他網站的 Cookie。")
@@ -189,6 +189,10 @@ def configure(vault, staged_vault, args):
                 print("目前只有短效網址 token，沒有驗證成功的 Cookie；過期後須手動登入，不能保證每日排程。")
         elif browser_method not in {"1", "3"}:
             raise AuthError("請選擇 1（ssid）、2（網址）或 3（完整 Cookie）。")
+    print("LINE 憑證請到 developers.line.biz/console，選自己的 Messaging API Channel。")
+    print("Messaging API 分頁最下方：Channel access token (long-lived) → Issue；不是 Channel ID。")
+    print("Basic settings 分頁：Channel secret；最下方 Your user ID（U 開頭 33 字）。")
+    print("先用手機將此 Bot 加為好友；詳細圖文路徑見 docs/install.md。")
     config = {"region": region, "line_access_token": required("LINE Channel Access Token：", secret=True),
               "line_channel_secret": required("LINE Channel Secret（Webhook 簽章驗證必要）：", secret=True),
               "line_user_id": required("LINE User ID（U 開頭）：")}

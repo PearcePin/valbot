@@ -129,6 +129,7 @@ class RiotChat:
         self.deferred = deque()
         self.connect_deadline = None
         self.allowed_friends = set()
+        self.message_handler = None
 
     def send(self, element):
         data = element if isinstance(element, bytes) else ET.tostring(element, encoding="utf-8")
@@ -136,8 +137,12 @@ class RiotChat:
 
     def read(self, seconds=30):
         if self.deferred:
-            return self.deferred.popleft()
-        return self._read(seconds)
+            stanza = self.deferred.popleft()
+        else:
+            stanza = self._read(seconds)
+        if stanza is not None and local_tag(stanza.tag) == "message" and self.message_handler:
+            self.message_handler(stanza)
+        return stanza
 
     def _read(self, seconds=30):
         deadline = time.monotonic() + seconds
@@ -163,7 +168,7 @@ class RiotChat:
                 raise ChatError("XMPP 驗證／請求被拒絕")
             if local_tag(stanza.tag) == tag and (stanza_id is None or stanza.get("id") == stanza_id):
                 return stanza
-            if local_tag(stanza.tag) == "presence" or (local_tag(stanza.tag) == "iq" and stanza.get("type") == "set"):
+            if local_tag(stanza.tag) in {"presence", "message"} or (local_tag(stanza.tag) == "iq" and stanza.get("type") == "set"):
                 if len(self.deferred) >= 2000:
                     raise ChatError("好友狀態資料過多")
                 self.deferred.append(stanza)

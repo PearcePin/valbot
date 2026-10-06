@@ -1,180 +1,93 @@
 # Valorant LINE Bot
 
-特戰英豪個人 LINE 助手，支援 Ubuntu Linux 與 Windows 10/11。採用 **FastAPI + LINE 官方 SDK v3 + httpx**，以 Flex Message 顯示遊戲資訊。原生 cron／工作排程器執行每日推播，不必讓 Webhook 常駐才可推播。Python **3.11–3.13，推薦 3.12**；目前 LINE SDK 使用 Pydantic V1，不支援 Python 3.14。
+特戰英豪個人 LINE 助手，支援 **Ubuntu 與 Windows 10／11**。使用 FastAPI、LINE 官方 SDK v3、httpx，以 Flex Message 呈現商店、戰績、牌位與 Riot 好友資訊。安裝器自動準備 **Python 3.12**，不需要移除系統 Python 3.14。
+
+**第一次安裝請看：[詳細安裝與排錯](docs/install.md)。** 包含 Token、User ID、ssid 的確切位置、404／HTTP 406、Cloudflare、背景服務、更新及換電腦步驟。[Riot 登入說明](docs/login.md)
 
 ## 功能
 
-| 指令 | Flex 內容 |
+| 指令 | 內容 |
 | --- | --- |
-| 商店 | 每日四把武器造型、圖片、VP 價格與更新倒數 |
-| 夜市 | 開放時六把武器、原價、折扣與折後價 |
-| 配件 | 本週卡面、吊飾、噴漆與 KC 價格 |
+| 商店 | 今日四把造型、圖片、VP 價格與更新倒數 |
+| 夜市 | 六把折扣造型、原價及折後價，未開放時提示 |
+| 配件 | 本週卡面、吊飾、噴漆及 KC 價格 |
 | 錢包 | VP／RP／KC 餘額 |
-| 戰績 | 每頁十場、持續翻頁查看更早紀錄；本頁總覽＋逐場輪播：勝率、K/D/A、ACS、ADR、爆頭比例、首殺／首死、多殺、安裝／拆除、ACS 排名、技能次數與經濟 |
-| 牌位 | 本季徽章與 RR、勝場／場次／勝率、定級進度、排行榜、最高勝場段位、近期 RR／加成／AFK 懲罰及賽季紀錄 |
-| 好友 | 手動偵測在線狀態、查看全部 Riot 好友；從同一張好友卡選人、撰寫私訊並確認送出 |
+| 戰績 | 每頁 10 場，可持續翻頁；勝率、K/D/A、ACS／ADR、爆頭比例、首殺／首死、多殺、安裝／拆除、排名、經濟、技能及競技 RR |
+| 牌位 | 本季徽章、RR、勝率、定級進度、排行榜、近期 RR 變動與賽季紀錄 |
+| 好友 | 手動查看全部 Riot 好友及在線狀態，在同一張卡上選人私訊 |
+| 好友訊息 | 手動短暫連線查看收到的私訊、本機訊息列表、翻頁、選擇回覆 |
 
-每日 **08:05（執行主機本地時區）**推送每日商店、配件、精選組合包，夜市開放時自動加入。查詢回覆依序顯示**指令中心 → 查詢結果**，錯誤回覆也採相同順序；多則 Flex 用同一次 LINE reply request 傳送。加好友或未知指令會顯示一次功能選單。僅設定的 LINE User ID 能查看資料，群組事件不處理。
+每日 **08:05（主機本地時區）**推送商店、配件、精選組合包；夜市開放時一併加入。查詢回覆先顯示 **指令中心 → 查詢結果**。僅設定的 LINE User ID 可查詢，群組不處理。任務、通行證、自動戰報與自動好友上線提醒已移除。
 
-按「戰績」顯示最近 10 場，按 **上一頁／下一頁** 繼續查看；也可輸入 **戰績 2** 查看第 11–20 場、**戰績 3** 查看第 21–30 場。依 Riot 的 `startIndex`／`endIndex` 分頁，不把總歷史限制在 10 或 100 場；實際可查看範圍仍以 Riot 保留並願意提供的紀錄為準，無法復原已不可取得的對戰。畫面標明 API 回報總場數，本頁統計僅計算本頁可用明細；缺漏場次保留位置並明示未提供。每頁最多並行讀取 4 份明細，每 5 張卡分一則輪播，包含指令中心最多 4 則訊息。新對戰結算時排序可能改變，翻頁會取得當下紀錄。
+戰績按上一頁／下一頁，或輸入 **戰績 2** 查看第 11–20 場。總歷史不設 100 場上限，實際範圍以 Riot 可提供的紀錄為準；統計只涵蓋本頁，明細缺少時顯示未提供。ACS／ADR 依回合數加權；爆頭比例是頭部命中／全部部位命中，不是射擊命中率。
 
-好友與傳訊息已合併成指令中心的**好友**入口。按「好友」／輸入「偵測好友」（舊「好友提醒」「傳訊息」也可）才取得 token＋PAS 並短暫連接 Riot XMPP，登入後採樣 5 秒並關閉連線，不會常駐監聽、不會主動發送上線通知。列表顯示全部互為好友，VALORANT 在線好友排在前面；Riot Mobile 常駐不算在 VALORANT 上線。未收到狀態只表示「本次未偵測到」，不保證離線。每頁 8 位、可翻頁，並標明查詢時間；再次按「好友」才重新偵測。舊自動提醒開關與設定不再啟用任何監聽。
+好友私訊：**好友 → 選收件人 → 輸入最多 500 字 → 預覽 → 確認送出**。草稿 10 分鐘內有效，輸入「取消私訊」可取消。送出時再次檢查帳號與好友關係，不會自動重送狀態不明的訊息；「已提交」不代表對方已收到或已讀。
 
-**傳送 Riot 好友私訊**：按「好友」→ 按好友卡片的「傳訊息給這位好友」→ 輸入最多 500 字 → 查看收件人與訊息預覽 → 按「確認送出」。使用你的 Riot 帳號發送，不是傳到朋友的 LINE。輸入「取消私訊」可取消；草稿與選擇名單 10 分鐘內有效。遊戲查詢與戰績翻頁指令仍優先執行，其他文字在撰寫階段會成為草稿，送出前一定要確認。重新按「好友」會取消前一份草稿。
-
-送出時重新驗證帳號與好友關係，以 XML serializer 處理內容，避免特殊字元破壞訊息。確認碼在網路寫入前即消耗，重複按鈕或重啟不會自動重送；「已提交」僅表示訊息寫入聊天連線，不是送達／已讀回條。若 Riot 回報錯誤或連線中斷，會明示送出狀態未確認，不自動重試。好友名單及草稿加密保存在 data/，不將訊息內容或憑證寫入日誌。
-
-此非官方功能依據 [VALORANT XMPP Playground](https://github.com/techchrism/valorant-xmpp-playground) 的收發實作及 [XMPP 私訊標準](https://www.rfc-editor.org/rfc/rfc6121.html) 開發；協定上可行，仍需部署後用實際帳號驗證 Riot 服務是否接受及朋友是否收到。Ubuntu 不需要 Riot Client，網路須允許 TCP 5223，登入須有效。短暫聊天連線可能讓你的 Riot 帳號短暫顯示在線；對方離線時不保證收到。
-
-更多可考慮的功能見 [功能候選清單](docs/feature-catalog.md)，目前實作上表功能。
-
-分析僅使用 API 實際資料。ACS＝分數／回合、ADR＝傷害／回合；爆頭比例＝頭部命中／頭身腿全部命中（不是射擊命中率）。本頁 ACS／ADR 依回合數加權，爆頭比例依命中數加權；回合明細不完整時顯示「—」。ACS 排名依本場所有玩家 ACS，比較不同模式需留意差異。神話／輻能不顯示誤導的 100 RR 晉級進度條。本版本已移除任務、通行證與自動戰報，輸入舊指令會回到指令中心。
+**好友訊息完全手動，不保持聊天連線、不主動推播。** 按下才短暫收信 5 秒，或保存其他手動聊天操作期間收到的私訊。只接受互為好友的私人文字，本機加密保留最近 200 則、每則最多 2000 字；可按「回覆這位好友」建立草稿。「標為已看」只改本機紀錄，不送 Riot 已讀回條。沒收取到訊息不代表朋友從未傳訊息：Riot 不保證回傳離線或已送往其他 Client 的聊天，不能當成完整聊天歷史。實際收發仍需部署後驗證。
 
 ## 一行指令安裝
 
-先安裝 **Git、Python 3.11+**；Ubuntu 另需 `python3-venv`、`cron` 並啟動 cron 服務。以下透過 Git 下載，支援已登入的私人儲存庫；私人 repo 需先完成 GitHub／Git Credential Manager 認證。
-
-Linux：
+Ubuntu（一般使用者終端機，不要 `sudo bash`）：
 
 ```bash
-git clone https://github.com/PearcePin/valbot.git "$HOME/valbot" && bash "$HOME/valbot/install.sh" --local
+sudo apt-get update && sudo apt-get install -y curl && curl -fsSL https://raw.githubusercontent.com/PearcePin/valbot/main/install.sh | bash
 ```
+
+自動處理 Git／cron、Python 3.12、套件、Riot／LINE 設定、cloudflared 及開機自啟的 systemd 服務。設定成功後，服務驗證並更新 LINE Webhook；你仍需在 Developers Console 開啟 **Use webhook**、關閉內建自動回覆。看到 **Bot service is ready.** 後可以關終端機；筆電要保持開機、連網且不休眠。
 
 Windows PowerShell：
-
-```powershell
-git clone https://github.com/PearcePin/valbot.git "$env:USERPROFILE\valbot"; if ($LASTEXITCODE -eq 0) { powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\valbot\install.ps1" -Local }
-```
-
-預設安裝至使用者家目錄 `valbot`，若目錄已存在，clone 會停止。可修改 clone 的目的目錄及後面的腳本路徑。`--local`／`-Local` 使用已下載專案；腳本可先開啟檢視。
-
-若儲存庫開放公開讀取，也可直接下載安裝器，由它自動 clone：
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/PearcePin/valbot/main/install.sh | bash
-```
 
 ```powershell
 & ([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://raw.githubusercontent.com/PearcePin/valbot/main/install.ps1').Content))
 ```
 
-直接下載模式的自訂目錄：Linux 設定 `VALBOT_INSTALL_DIR`；PowerShell 加入 `-Destination 'C:\Tools\valbot'`。未授權的私人 repo raw URL 會回傳 404，請使用上方 Git 安裝指令。
-
-已 clone 者直接執行：
-
-```bash
-# Linux
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python setup.py
-```
+缺少 Git 時使用 winget 安裝，再自動準備 Python 3.12、套件、設定及 cloudflared。完成後用一個終端機啟動 Bot＋Tunnel：
 
 ```powershell
-# Windows
-py -3 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe setup.py
+cd "$env:USERPROFILE\valbot"
+.\.venv\Scripts\python.exe -m valbot.daemon
 ```
 
-## 取得 LINE 憑證
+Windows 此終端機需保持開啟，Ctrl+C 會停止；長期背景運作推薦 Ubuntu。Windows 設定精靈預設讀取已登入的 Riot Client，Client 需保持登入、開啟。Ubuntu 預設瀏覽器 Cookie，登入完成的 404 頁面不代表登入失敗。
 
-Ubuntu 系統 Python 若為 3.14，可用 [uv](https://docs.astral.sh/uv/guides/install-python/) 為 Bot 另裝 Python 3.12：
+預設專案為家目錄 `valbot`。已 clone 者更新後執行 **`bash install.sh --local`**／**`powershell -ExecutionPolicy Bypass -File .\install.ps1 -Local`**，不必刪掉舊專案。相容環境與設定會保留，不相容的 .venv 會先改名備份。若 raw URL 無法讀取私人 repo，先透過已登入 Git clone，再執行本機安裝器。
 
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-"$HOME/.local/bin/uv" python install 3.12
-VALBOT_PYTHON="$("$HOME/.local/bin/uv" python find 3.12)" bash "$HOME/valbot/install.sh" --local
-```
+## LINE 憑證從哪裡拿
 
-先 clone 專案再執行上述步驟。系統原本的 Python 可保留；`VALBOT_PYTHON` 僅指定此專案建立 venv 所用的 Python。若之前已有不相容的 `.venv`，先將它重新命名備份，保留 `data/` 設定。
+1. 在 [Official Account Manager](https://manager.line.biz/) 建立官方帳號並啟用 Messaging API。
+2. 到 [Developers Console](https://developers.line.biz/console/) → Provider → **Messaging API Channel**。
+3. **Messaging API** 分頁最下方 → **Channel access token (long-lived) → Issue**。
+4. **Basic settings** → **Channel secret**；同頁最下方 **Your user ID**（U 開頭共 33 字）。
+5. 手機將 Bot 加為好友，將三項資料貼入本機精靈。它會測試登入、商店、LINE 憑證及推播；成功才保存設定。
 
-1. 建立 [LINE 官方帳號](https://manager.line.biz/)，在設定中啟用 Messaging API。
-2. 至 [LINE Developers Console](https://developers.line.biz/console/) 的 Messaging API Channel，發行 **Channel access token（long-lived）**。
-3. 在 Basic settings 找到 **Channel secret** 與 **Your user ID**；手機將 Bot 加為好友。
-4. 精靈輸入區域後選擇 Riot 登入方式；**Windows 推薦先登入 Riot Client 並進入遊戲，選本機模式，不需輸入密碼、ssid 或網址**。再輸入 Access Token、Channel Secret、User ID。會測試商店、Token、收件人並傳送功能選單，成功才保存 LINE 設定與註冊排程。
+找不到 Token 時通常是停在官方帳號管理後台；必須進 Developers Console。完整欄位對照及登入步驟見 [安裝說明](docs/install.md)。不要分享 Token、Cookie、登入網址或 data/。
 
-Channel Secret 是 Webhook 驗證所必需，與 Access Token 不同。LINE 額度與封鎖好友狀態會影響推播。
+## 更新與維護
 
-## Riot 登入與資料限制
-
-商店、餘額、戰績使用遊戲的**非官方私有端點**，並非 Riot 正式開放的商店 API。Riot 可能調整登入、要求 CAPTCHA 或封鎖直接帳密登入；程式不會繞過驗證。帳密模式支援最多三次 2FA，失敗時切換瀏覽器模式。預設使用新版 `riot_identity`／`multifactor.otp` 欄位，舊協定可用 `setup.py --legacy-auth`。
-
-**登入步驟與 ssid 具體位置：[docs/login.md](docs/login.md)。** Windows 可執行 `python setup.py --login-method local` 自動讀取自己的 Riot Client 登入；每日推播時 Client 需保持登入並開啟，token 過期會重新向本機 Client 取得，不需要 Cookie。切換 Riot 帳號時會拒絕沿用別人的工作階段。
-
-瀏覽器模式預設只需 **ssid**，不必貼跳轉網址。完成網頁登入／2FA 後，精靈會引導開啟 `https://auth.riotgames.com/` 分頁（即使 404 仍可檢視 Cookie），按 F12 → Application（應用程式）→ Storage → Cookies → `https://auth.riotgames.com`，複製 Name 為 **ssid** 那列的 **Value**。這不是 Wi-Fi SSID。輸入後立即向 Riot 測試登入；失敗可原地重試。
-
-進階網址模式支援含 `access_token` 的 playvalorant.com 跳轉網址（含 www／語言路徑／結尾斜線），驗證成功才詢問可選的 ssid。沒有 ssid 的網址 token 通常約一小時有效，**不適合每日無人值守排程**。Cookie 也可能失效；重新執行 `setup.py` 登入即可。不要分享跳轉網址、Cookie 或 Token。
-
-圖片與繁體中文 UUID 資料來自 [Valorant-API](https://valorant-api.com/)。公開圖庫可能落後最新版本；未知圖片或價格會明示未提供，不推算虛假資訊。
-
-## Webhook 部署
-
-```bash
-# Linux
-.venv/bin/python -m uvicorn valbot.app:app --host 127.0.0.1 --port 8000
-```
-
-```powershell
-# Windows
-.\.venv\Scripts\python.exe -m uvicorn valbot.app:app --host 127.0.0.1 --port 8000
-```
-
-使用 HTTPS 反向代理或 tunnel 將外部網址轉至本機 8000；在 LINE Console 設定 `https://你的網域/webhook`，按 Verify 並啟用 Use webhook，停用內建自動回覆以免重複。`GET /health` 用於健康檢查。請以**單一 Uvicorn worker**常駐運作，可透過 systemd 或 Windows 服務管理工具管理；安裝精靈只註冊每日推播，不自動建立公開網域或常駐 Webhook 服務。
-
-### Ubuntu：關閉終端機後繼續運作／開機自動啟動
-
-完成登入設定，且已下載 Linux 版 cloudflared 到 `data/cloudflared` 後，先在手動執行 Bot 和 Tunnel 的兩個終端機按 **Ctrl+C**，再執行：
-
-```bash
-cd "$HOME/valbot"
-git pull --ff-only
-bash deploy-linux.sh
-sudo journalctl -u valbot.service -n 50 -f
-```
-
-看到 `Webhook verified and updated` 和 `Bot service is ready` 後，在查看日誌的終端機按 Ctrl+C，即可關閉終端機；不會停止 systemd 的服務。服務以目前普通使用者執行，在開機後啟動，Bot 或 Tunnel 崩潰時會重啟。Quick Tunnel 每次重啟可能換網址，服務會等待新網址可連線，先讓 LINE 驗證成功，再更新 Webhook。**Use webhook 仍需在 LINE Console 開啟**。大量啟動失敗時 systemd 會暫停重試，修復後可重新執行部署腳本。
-
-```bash
-sudo systemctl status valbot.service --no-pager # 查看執行狀態
-sudo journalctl -u valbot.service -n 50         # 查看最近日誌
-sudo systemctl restart valbot.service          # 重啟（會自動更新 Webhook）
-sudo systemctl stop valbot.service             # 暫時停止
-sudo systemctl disable --now valbot.service    # 停止並取消開機啟動
-```
-
-版本更新只需：
+Ubuntu 已安裝者只需：
 
 ```bash
 cd "$HOME/valbot"
 bash update-linux.sh
 ```
 
-更新腳本先檢查 Git 沒有本機原始碼修改，使用 `git pull --ff-only` 更新，再停止服務、安裝相依套件及檢查 imports，最後重新註冊／啟動服務。`data/` 中登入設定和每日 cron 保留。更新失敗時會保留檔案並回報，服務保持停止，需依錯誤修復再啟動；沒有自動 rollback。cloudflared 不會在每次更新時重新下載。
-
-服務模式仍需要筆電開機且連網，請在 Ubuntu 電源設定關閉自動休眠並確認闔蓋行為。Quick Tunnel 無 uptime 保證，此服務會處理重啟後網址更新，但不保證網路或 Riot Cookie 永久可用。Cookie 失效時重新執行設定精靈後重啟服務。
-
-Webhook 驗證簽章後先寫入加密 SQLite 佇列並回應 LINE，後台處理查詢；以 event ID 防止重送重複回覆。超過 55 秒的佇列事件不再使用過期 reply token；若上游太慢或服務中斷，重新傳送指令即可。
-
-## 排程與操作
-
-精靈成功後自動建立 cron 或 Windows hidden task，以虛擬環境 Python 的絕對路徑執行。Windows 使用 `pythonw.exe` 隱藏視窗，採目前使用者登入權限，**需保持該使用者登入**（鎖定螢幕可運作）；登出、休眠或關機時不保證準點。Ubuntu 必須保持開機且 cron 啟用。若要台灣時間 08:05，先將主機時區設為 Asia/Taipei／Taipei Standard Time，再註冊排程。
+自動拉取版本、安裝套件及重啟服務，保留 `data/` 和排程，不需重新登入。原始碼有未保存變更時會停止，更新失敗沒有自動 rollback；依錯誤修復後再啟動。cloudflared 不會每次更新都重下載。
 
 ```bash
-# 以下使用你的 venv Python 替換 python
-python setup.py --no-schedule      # 僅設定與登入測試
-python setup.py --schedule-only    # 修復／重新註冊排程
-python run_daily.py --dry-run      # 取得真實資料，產生 data/daily-preview.json，不推播
-python run_daily.py                # 當日最多成功推播一次
-python run_daily.py --force        # 手動重送（會再次消耗 LINE 額度）
+systemctl status valbot.service --no-pager
+sudo journalctl -u valbot.service -n 50 --no-pager
+sudo systemctl restart valbot.service
 ```
 
-Linux 用 `crontab -l` 查看排程；移除該 `ValorantLineBot-*` BEGIN/END 區塊即可取消。Windows 在 Task Scheduler 找到 `ValorantLineBot-*` 可檢視／停用／刪除。相同專案重新設定只替換自己的排程，不覆蓋其他 cron 任務。
+日誌加 `-f` 可即時追蹤；Ctrl+C 只離開日誌，不會關服務。Quick Tunnel 不需購買網域，網址更換後服務會更新 Webhook；[Cloudflare 不保證 Quick Tunnel uptime](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/)。同一個 LINE Channel 不要同時啟動 Windows／Ubuntu 兩份，避免搶著更新 Webhook。
 
-`data/daily.log` 保存輪替錯誤紀錄；Linux 排程輸出另見 `data/cron.log`。推播使用 LINE retry key 與當日 checkpoint，重試途中不重複送出已接受的批次。依賴失效、LINE 額度不足或上游出錯時非零退出；排程隔天再執行，修復後可手動重跑。
+Riot Cookie 失效需重新執行 `.venv/bin/python setup.py --login-method browser`，再重啟服務。台灣每日 08:05 需設定主機 Asia/Taipei 時區，詳見安裝說明。原生 cron／Windows 工作排程器的每日推播與常駐 Webhook 是兩件事，停掉服務不會自動取消每日排程。
 
-## 本機資料與開發
+## 資料與開發
 
-密碼不落地；LINE 憑證、Riot token／cookie、每日 checkpoint 使用 Fernet 加密。金鑰存在同一個 `data/`，需保護整個目錄；加密不防止可讀取該 OS 帳號檔案的人。Linux 目錄權限 700；Windows 建立時移除繼承 ACL 並只授權目前使用者。`data/` 已從 Git 排除，可用 `VALBOT_DATA_DIR` 指向別處。移機時須重新設定，或安全移轉完整資料與重新註冊排程。
+Riot 遊戲／聊天使用非官方介面，可能變更或要求 CAPTCHA／2FA；程式不繞過驗證，不保證永久登入。圖片與 UUID 來自 [Valorant-API](https://valorant-api.com/)，未知欄位不編造。Python 支援 3.11–3.13，安裝器預設 3.12。
+
+密碼不落地；LINE 憑證、Riot session、訊息、草稿及推播 checkpoint 使用 Fernet 加密。`data/` 和 vault.key 需一起保護，加密無法防止同一 OS 帳號讀取。Linux 目錄 700；Windows 建立時移除繼承 ACL。Git 排除 data/、虛擬環境及其備份；可用 `VALBOT_DATA_DIR` 自訂資料位置，但需自行配合 Tunnel 路徑與部署。移機請重新安裝／設定，不要直接搬 Windows .venv 到 Linux。
 
 ```bash
 python -m pip install -r requirements-dev.txt
@@ -182,8 +95,6 @@ python -m ruff check .
 python -m pytest -q
 ```
 
-測試使用模擬 Riot／LINE 回應，不需要真實帳密。GitHub Actions 已配置 Ubuntu／Windows、Python 3.11／3.12；真實 Riot 登入、LINE 接收與 OS 排程須在部署主機完成實測。
+測試以模擬 Riot／LINE／安裝器驗證，不會使用真實帳密或改系統服務；GitHub Actions 執行 Ubuntu／Windows、Python 3.11／3.12。`examples/flex-messages.json` 使用公開圖片與示範數據，可放入 [LINE Flex Simulator](https://developers.line.biz/flex-simulator/) 檢視；`python -m tools.export_flex_samples` 重建。
 
-`examples/flex-messages.json` 是使用真實公開圖庫與**示範數值**的七組卡片，包含武器輪播、夜市、卡面、戰績及牌位。複製其中一則的 `contents` 到 [LINE Flex Message Simulator](https://developers.line.biz/flex-simulator/) 檢視正式排版；用 `python -m tools.export_flex_samples` 可重新生成。此檔不含帳號資料，也不會傳送訊息。
-
-API 參考：[LINE Python SDK](https://github.com/line/line-bot-sdk-python)、[LINE Flex](https://developers.line.biz/en/docs/messaging-api/flex-message-elements/)、[Riot 端點研究](https://valapidocs.techchrism.me/)、[Storefront v3 端點記錄](https://gist.github.com/Kavan72/b6e0bfdf21d610148f64df878b8a2cc5)。非 Riot／LINE 官方產品。
+[功能候選清單](docs/feature-catalog.md) · [詳細安裝](docs/install.md) · [登入排錯](docs/login.md) · [Riot 端點研究](https://valapidocs.techchrism.me/) · [VALORANT XMPP](https://github.com/techchrism/valorant-xmpp-playground)

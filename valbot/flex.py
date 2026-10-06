@@ -42,7 +42,7 @@ def notice(title, detail):
 def menu():
     commands = [("商店", "今日造型"), ("夜市", "限定折扣"), ("配件", "每週精選"),
                 ("錢包", "VP / RP / KC"), ("戰績", "多場戰績與翻頁"), ("牌位", "段位與 RR"),
-                ("好友", "在線狀態與私訊")]
+                ("好友", "在線狀態與私訊"), ("好友訊息", "手動查看收到的私訊")]
     rows = []
     for i in range(0, len(commands), 2):
         rows.append(box([box([text(cmd, "lg", weight="bold"), text(label, "xs", MUTED)],

@@ -1,4 +1,4 @@
-"""Linux service: supervise the Bot and a Quick Tunnel, updating LINE after readiness."""
+"""Supervise Bot + Quick Tunnel; Linux service or Windows foreground launcher."""
 import logging
 import os
 from pathlib import Path
@@ -47,11 +47,8 @@ def sync_webhook(base, token, stop):
 
 def main():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-    if os.name != "posix":
-        log.error("This launcher is intended for Linux.")
-        return 1
     config = load_config()
-    binary = Path(os.environ.get("VALBOT_CLOUDFLARED", data_dir() / "cloudflared")).resolve()
+    binary = Path(os.environ.get("VALBOT_CLOUDFLARED", data_dir() / ("cloudflared.exe" if os.name == "nt" else "cloudflared"))).resolve()
     if not binary.is_file() or not os.access(binary, os.X_OK):
         log.error("cloudflared is missing or not executable: %s", binary)
         return 1

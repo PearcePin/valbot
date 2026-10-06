@@ -21,3 +21,10 @@ jobs:
           for script in install.sh deploy-linux.sh update-linux.sh; do
             bash -n "$script"
           done
+      - name: Check PowerShell installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $parseErrors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PWD 'install.ps1'), [ref]$null, [ref]$parseErrors) | Out-Null
+          if ($parseErrors) { $parseErrors | Write-Error; exit 1 }

@@ -88,3 +88,23 @@ def test_daemon_startup_failure_stops_launched_bot(tmp_path, monkeypatch):
     assert launch.call_args.kwargs["cwd"] == ROOT
     bot.terminate.assert_called_once()
     bot.wait.assert_called_once_with(timeout=10)
+
+
+def test_windows_launcher_selects_exe_and_cleans_up_without_real_launch(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    binary = tmp_path / "cloudflared.exe"
+    binary.write_bytes(b"placeholder")
+    monkeypatch.delenv("VALBOT_CLOUDFLARED", raising=False)
+    monkeypatch.setattr(daemon, "data_dir", lambda: tmp_path)
+    monkeypatch.setattr(daemon, "os", SimpleNamespace(name="nt", environ=daemon.os.environ,
+                                                     access=lambda path, mode: str(path).endswith(".exe"), X_OK=1))
+    monkeypatch.setattr(daemon, "load_config", lambda: {"line_access_token": "private-token"})
+    monkeypatch.setattr(daemon.signal, "signal", Mock())
+    bot = Mock()
+    bot.poll.return_value = None
+    launch = Mock(return_value=bot)
+    monkeypatch.setattr(daemon.subprocess, "Popen", launch)
+    monkeypatch.setattr(daemon, "wait_health", Mock(side_effect=RuntimeError("unavailable")))
+    assert daemon.main() == 1
+    assert launch.call_count == 1
+    bot.terminate.assert_called_once()

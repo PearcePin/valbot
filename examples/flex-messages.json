@@ -281,6 +281,36 @@
                   "label": "好友",
                   "text": "好友"
                 }
+              },
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "好友訊息",
+                    "size": "lg",
+                    "color": "#F1F5F9",
+                    "wrap": true,
+                    "weight": "bold"
+                  },
+                  {
+                    "type": "text",
+                    "text": "手動查看收到的私訊",
+                    "size": "xs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  }
+                ],
+                "flex": 1,
+                "paddingAll": "12px",
+                "backgroundColor": "#1B2935",
+                "cornerRadius": "12px",
+                "action": {
+                  "type": "message",
+                  "label": "好友訊息",
+                  "text": "好友訊息"
+                }
               }
             ],
             "spacing": "md"

@@ -93,6 +93,9 @@ def connection(config, vault):
     chat = RiotChat(creds, threading.Event())
     try:
         roster = chat.connect()
+        from .mailbox import record
+        tracker = PresenceTracker(roster)
+        chat.message_handler = lambda stanza: record(config, vault, stanza, tracker.friends)
         yield chat, roster
     finally:
         chat.close()
@@ -101,6 +104,8 @@ def connection(config, vault):
 def query(config, vault):
     with connection(config, vault) as (chat, roster):
         tracker = PresenceTracker(roster)
+        from .mailbox import record
+        chat.message_handler = lambda stanza: record(config, vault, stanza, tracker.friends)
         start = time.monotonic()
         # Bounded sample; never turn a user action into ongoing monitoring.
         while time.monotonic() - start < 5:

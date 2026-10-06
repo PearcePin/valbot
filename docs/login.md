@@ -46,10 +46,10 @@ ssid 等同登入憑證，只貼入本機精靈。Bot 會以它測試登入並�
 
 ## ssid 不足時：選 3，匯入 Riot 完整 Cookie
 
-1. 在已登入的瀏覽器按 F12，選 **Network（網路）**，勾 **Preserve log（保留紀錄）**。
+1. 在已登入的瀏覽器按 F12，選 **Network（網路）**，勾 **Preserve log／Keep log（保留紀錄）**；兩者都是切換頁面時保留請求。
 2. 重新開啟精靈顯示的 Riot 登入連結並完成所需驗證。
 3. 在 Network 找到 **Request URL 是 `https://auth.riotgames.com/authorize?...`** 的請求；請求名稱通常是 `authorize`。
-4. 點該請求 → **Headers → Request Headers**，複製 **Cookie** 欄位完整值，應包含 `ssid=...; ...`。
+4. 點該請求 → **Headers → Request Headers**，複製 **Cookie** 欄位完整值，應包含 `ssid=...; ...`。請求不一定顯示完整 authorize 網址，可在上方 Filter 輸入 `auth.riotgames.com`，再看 Request URL；若只看到 `check-session-iframe`，它的 Request Headers 若帶有 `ssid` 也可用，否則重新走一次登入。
 5. 精靈選 **3 Riot 完整 Cookie**，將值貼入隱藏輸入處。不是 Response Headers 的 Set-Cookie，也不是所有標頭。
 
 這會保留該 Riot 網域的其他登入 Cookie，一併測試更新；Cookie 只會送至 `auth.riotgames.com`，並加密保存。此方式仍可能因失效、Riot 互動驗證或網路限制失敗，不保證永久登入。不要分享 Cookie 欄位或任何 token。

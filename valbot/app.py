@@ -17,10 +17,10 @@ from .queue import Inbox
 from .riot import RiotClient
 from .service import BotService, is_match_command
 from .storage import Vault
-from . import friends
+from . import friends, mailbox
 
 log = logging.getLogger("valbot")
-COMMANDS = {"商店", "夜市", "配件", "錢包", "戰績", "牌位"} | friends.FRIEND_COMMANDS
+COMMANDS = {"商店", "夜市", "配件", "錢包", "戰績", "牌位"} | friends.FRIEND_COMMANDS | mailbox.MAIL_COMMANDS
 
 
 def process_event(event, config, vault, line):
@@ -33,12 +33,15 @@ def process_event(event, config, vault, line):
     elif event.get("type") == "message":
         command = (event.get("message") or {}).get("text", "").strip()
         match_command = is_match_command(command)
-        friend_command = command in friends.FRIEND_COMMANDS or (command not in COMMANDS and not match_command and friends.handles(config, vault, command))
-        if command not in COMMANDS and not match_command and not friend_command:
+        mail_command = mailbox.handles(command)
+        friend_command = command in friends.FRIEND_COMMANDS or (command not in COMMANDS and not match_command and not mail_command and friends.handles(config, vault, command))
+        if command not in COMMANDS and not match_command and not mail_command and not friend_command:
             messages = flex.messages([flex.menu()])
         else:
             try:
-                if friend_command:
+                if mail_command:
+                    messages = mailbox.command(config, vault, command)
+                elif friend_command:
                     messages = friends.command(config, vault, command)
                 else:
                     with httpx.Client(timeout=12) as client:
