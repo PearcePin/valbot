@@ -72,7 +72,7 @@ def test_match_uses_own_team_and_correct_acs():
     LineClient.models(flex.messages([card]))
 
 
-@pytest.mark.parametrize("command", ["任務", "通行證"])
+@pytest.mark.parametrize("command", ["任務", "通行證", "自動戰報", "自動戰報開啟", "自動戰報關閉"])
 def test_retired_commands_only_show_menu(command):
     from valbot.app import COMMANDS
     riot = fake_riot()

@@ -258,36 +258,6 @@
                 "contents": [
                   {
                     "type": "text",
-                    "text": "自動戰報",
-                    "size": "lg",
-                    "color": "#F1F5F9",
-                    "wrap": true,
-                    "weight": "bold"
-                  },
-                  {
-                    "type": "text",
-                    "text": "賽後推播開關",
-                    "size": "xs",
-                    "color": "#A5B4C3",
-                    "wrap": true
-                  }
-                ],
-                "flex": 1,
-                "paddingAll": "12px",
-                "backgroundColor": "#1B2935",
-                "cornerRadius": "12px",
-                "action": {
-                  "type": "message",
-                  "label": "自動戰報",
-                  "text": "自動戰報"
-                }
-              },
-              {
-                "type": "box",
-                "layout": "vertical",
-                "contents": [
-                  {
-                    "type": "text",
                     "text": "好友",
                     "size": "lg",
                     "color": "#F1F5F9",
@@ -311,14 +281,7 @@
                   "label": "好友",
                   "text": "好友"
                 }
-              }
-            ],
-            "spacing": "md"
-          },
-          {
-            "type": "box",
-            "layout": "horizontal",
-            "contents": [
+              },
               {
                 "type": "box",
                 "layout": "vertical",
