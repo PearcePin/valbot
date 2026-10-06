@@ -108,6 +108,38 @@ Channel Secret 是 Webhook 驗證所必需，與 Access Token 不同。LINE 額�
 
 使用 HTTPS 反向代理或 tunnel 將外部網址轉至本機 8000；在 LINE Console 設定 `https://你的網域/webhook`，按 Verify 並啟用 Use webhook，停用內建自動回覆以免重複。`GET /health` 用於健康檢查。請以**單一 Uvicorn worker**常駐運作，可透過 systemd 或 Windows 服務管理工具管理；安裝精靈只註冊每日推播，不自動建立公開網域或常駐 Webhook 服務。
 
+### Ubuntu：關閉終端機後繼續運作／開機自動啟動
+
+完成登入設定，且已下載 Linux 版 cloudflared 到 `data/cloudflared` 後，先在手動執行 Bot 和 Tunnel 的兩個終端機按 **Ctrl+C**，再執行：
+
+```bash
+cd "$HOME/valbot"
+git pull --ff-only
+bash deploy-linux.sh
+sudo journalctl -u valbot.service -n 50 -f
+```
+
+看到 `Webhook verified and updated` 和 `Bot service is ready` 後，在查看日誌的終端機按 Ctrl+C，即可關閉終端機；不會停止 systemd 的服務。服務以目前普通使用者執行，在開機後啟動，Bot 或 Tunnel 崩潰時會重啟。Quick Tunnel 每次重啟可能換網址，服務會等待新網址可連線，先讓 LINE 驗證成功，再更新 Webhook。**Use webhook 仍需在 LINE Console 開啟**。大量啟動失敗時 systemd 會暫停重試，修復後可重新執行部署腳本。
+
+```bash
+sudo systemctl status valbot.service --no-pager # 查看執行狀態
+sudo journalctl -u valbot.service -n 50         # 查看最近日誌
+sudo systemctl restart valbot.service          # 重啟（會自動更新 Webhook）
+sudo systemctl stop valbot.service             # 暫時停止
+sudo systemctl disable --now valbot.service    # 停止並取消開機啟動
+```
+
+版本更新只需：
+
+```bash
+cd "$HOME/valbot"
+bash update-linux.sh
+```
+
+更新腳本先檢查 Git 沒有本機原始碼修改，使用 `git pull --ff-only` 更新，再停止服務、安裝相依套件及檢查 imports，最後重新註冊／啟動服務。`data/` 中登入設定和每日 cron 保留。更新失敗時會保留檔案並回報，服務保持停止，需依錯誤修復再啟動；沒有自動 rollback。cloudflared 不會在每次更新時重新下載。
+
+服務模式仍需要筆電開機且連網，請在 Ubuntu 電源設定關閉自動休眠並確認闔蓋行為。Quick Tunnel 無 uptime 保證，此服務會處理重啟後網址更新，但不保證網路或 Riot Cookie 永久可用。Cookie 失效時重新執行設定精靈後重啟服務。
+
 Webhook 驗證簽章後先寫入加密 SQLite 佇列並回應 LINE，後台處理查詢；以 event ID 防止重送重複回覆。超過 55 秒的佇列事件不再使用過期 reply token；若上游太慢或服務中斷，重新傳送指令即可。
 
 ## 排程與操作

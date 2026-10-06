@@ -1,7 +1,8 @@
 import json
 
 from linebot.v3.messaging import (ApiClient, Configuration, MessagingApi, FlexMessage, FlexContainer,
-                                   ReplyMessageRequest, PushMessageRequest)
+                                   ReplyMessageRequest, PushMessageRequest, SetWebhookEndpointRequest,
+                                   TestWebhookEndpointRequest)
 
 
 class LineClient:
@@ -20,6 +21,19 @@ class LineClient:
     def validate_user(self, user_id):
         with ApiClient(self.configuration) as client:
             return MessagingApi(client).get_profile(user_id, _request_timeout=15)
+
+    def configure_webhook(self, endpoint):
+        """Verify the new endpoint before replacing the existing LINE webhook."""
+        with ApiClient(self.configuration) as client:
+            api = MessagingApi(client)
+            test = api.test_webhook_endpoint(TestWebhookEndpointRequest(endpoint=endpoint), _request_timeout=20)
+            if not test.success:
+                raise RuntimeError("LINE 無法驗證新 Webhook，現有設定未變更。")
+            api.set_webhook_endpoint(SetWebhookEndpointRequest(endpoint=endpoint), _request_timeout=15)
+            state = api.get_webhook_endpoint(_request_timeout=15)
+            if state.endpoint != endpoint:
+                raise RuntimeError("LINE Webhook 網址未更新成功。")
+            return state.active
 
     def reply(self, reply_token, messages):
         with ApiClient(self.configuration) as client:

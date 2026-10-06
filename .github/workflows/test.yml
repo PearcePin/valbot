@@ -17,4 +17,7 @@ jobs:
       - run: python -m pytest -q
       - name: Check bash installer
         if: runner.os == 'Linux'
-        run: bash -n install.sh
+        run: |
+          for script in install.sh deploy-linux.sh update-linux.sh; do
+            bash -n "$script"
+          done
