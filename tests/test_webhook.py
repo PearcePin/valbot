@@ -61,7 +61,7 @@ def test_inbox_survives_restart_and_hides_reply_token(tmp_path):
 
 
 @pytest.mark.parametrize("failure", [False, True])
-def test_query_reply_ends_with_one_menu_even_on_failure(tmp_path, monkeypatch, failure):
+def test_query_reply_starts_with_one_menu_even_on_failure(tmp_path, monkeypatch, failure):
     import valbot.app as app_module
     result = flex.messages([flex.notice("戰績", "測試結果")])
     service = Mock()
@@ -77,4 +77,4 @@ def test_query_reply_ends_with_one_menu_even_on_failure(tmp_path, monkeypatch, f
     line.reply.assert_called_once()
     messages = line.reply.call_args.args[1]
     assert len(messages) == 2
-    assert messages[-1]["contents"] == flex.menu()
+    assert messages[0]["contents"] == flex.menu()
