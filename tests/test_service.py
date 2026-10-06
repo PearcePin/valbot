@@ -21,6 +21,7 @@ def fake_riot():
     riot.assets.lookup.return_value = {"displayName": "精選包", "displayIcon": "https://example.com/bundle.png"}
     riot.assets.map.return_value = {}
     riot.competitive_updates.return_value = []
+    riot.matches_page.return_value = {"items": [], "total": 0, "has_next": False}
     return riot
 
 
@@ -99,7 +100,8 @@ def test_recent_match_carousel_handles_available_history(count):
     riot.assets.lookup.return_value = {}
     match = {"matchInfo": {"queueID": "competitive"}, "players": [
         {"subject": "owner", "teamId": "Red", "stats": {"score": 2000, "roundsPlayed": 10}}]}
-    riot.recent_matches.return_value = [match] * count
+    riot.matches_page.return_value = {"items": [{"id": str(i), "match": match} for i in range(count)],
+                                     "total": count, "has_next": False}
     messages = BotService(riot).command("戰績")
     contents = messages[-1]["contents"]
     if count:

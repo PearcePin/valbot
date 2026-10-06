@@ -59,6 +59,20 @@ def test_query_connects_only_on_demand_closes_and_never_pushes(tmp_path, monkeyp
     LineClient.models(messages)
 
 
+def test_merged_friend_entry_shows_all_friends_and_preserves_old_alias(tmp_path, monkeypatch):
+    vault = Vault(tmp_path)
+    friend = snapshot(vault)
+    state = vault.read("friend_snapshot")
+    state["friends"].append({**friend, "name": "Offline Friend", "key": "offline", "online": False})
+    monkeypatch.setattr(friends, "query", Mock(return_value=state))
+    first = friends.command(CONFIG, vault, "好友")
+    alias = friends.command(CONFIG, vault, "傳訊息")
+    assert first == alias and len(first[1]["contents"]["contents"]) == 2
+    assert "私訊選擇 offline" in json.dumps(first, ensure_ascii=False)
+    menu = json.dumps(flex.menu(), ensure_ascii=False)
+    assert '"text": "好友"' in menu and '"text": "傳訊息"' not in menu
+
+
 def test_app_startup_has_no_friend_connections_even_with_legacy_enabled_setting(tmp_path, monkeypatch):
     vault = Vault(tmp_path)
     vault.write("friend_preferences", {"enabled": True})

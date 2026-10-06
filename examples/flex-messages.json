@@ -199,7 +199,7 @@
                   },
                   {
                     "type": "text",
-                    "text": "最近五場",
+                    "text": "多場戰績與翻頁",
                     "size": "xs",
                     "color": "#A5B4C3",
                     "wrap": true
@@ -266,7 +266,7 @@
                   },
                   {
                     "type": "text",
-                    "text": "手動偵測在線好友",
+                    "text": "在線狀態與私訊",
                     "size": "xs",
                     "color": "#A5B4C3",
                     "wrap": true
@@ -280,36 +280,6 @@
                   "type": "message",
                   "label": "好友",
                   "text": "好友"
-                }
-              },
-              {
-                "type": "box",
-                "layout": "vertical",
-                "contents": [
-                  {
-                    "type": "text",
-                    "text": "傳訊息",
-                    "size": "lg",
-                    "color": "#F1F5F9",
-                    "wrap": true,
-                    "weight": "bold"
-                  },
-                  {
-                    "type": "text",
-                    "text": "私訊 Riot 好友",
-                    "size": "xs",
-                    "color": "#A5B4C3",
-                    "wrap": true
-                  }
-                ],
-                "flex": 1,
-                "paddingAll": "12px",
-                "backgroundColor": "#1B2935",
-                "cornerRadius": "12px",
-                "action": {
-                  "type": "message",
-                  "label": "傳訊息",
-                  "text": "傳訊息"
                 }
               }
             ],

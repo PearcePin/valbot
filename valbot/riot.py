@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import json
+from concurrent.futures import ThreadPoolExecutor
 
 import httpx
 
@@ -72,16 +73,41 @@ class RiotClient:
     def content(self):
         return self.request("/content-service/v3/content", shared=True)
 
-    def recent_matches(self, limit=5):
-        if not 1 <= limit <= 5:
-            raise ValueError("戰績查詢數量須為 1 至 5 場。")
-        return [self.match_detail(entry["MatchID"]) for entry in self.match_history(limit)]
+    def recent_matches(self, limit=10, start=0):
+        if not 1 <= limit <= 10:
+            raise ValueError("每頁戰績數量須為 1 至 10 場。")
+        return [self.match_detail(entry["MatchID"]) for entry in self.match_history(limit, start)]
 
-    def match_history(self, limit=10):
+    def match_history_page(self, limit=10, start=0):
         if not 1 <= limit <= 100:
             raise ValueError("戰績紀錄數量須為 1 至 100 場。")
-        return (self.request(f"/match-history/v1/history/{self.puuid}?startIndex=0&endIndex={limit}")
-                .get("History") or [])[:limit]
+        if start < 0:
+            raise ValueError("戰績起始位置不可為負數。")
+        result = self.request(f"/match-history/v1/history/{self.puuid}?startIndex={start}&endIndex={start + limit}")
+        if result.get("BeginIndex", start) != start:
+            raise DataError("Riot 無法提供此頁戰績紀錄。")
+        return result
+
+    def match_history(self, limit=10, start=0):
+        return (self.match_history_page(limit, start).get("History") or [])[:limit]
+
+    def matches_page(self, start=0, limit=10):
+        if not 1 <= limit <= 10:
+            raise ValueError("每頁戰績數量須為 1 至 10 場。")
+        history = self.match_history_page(limit + 1, start)
+        entries = history.get("History") or []
+        total = history.get("Total")
+        total = total if isinstance(total, int) and total >= 0 else None
+        def fetch(entry):
+            try:
+                return {"id": entry["MatchID"], "match": self.match_detail(entry["MatchID"])}
+            except DataError:
+                return {"id": entry["MatchID"], "match": None}
+        # httpx.Client supports threads. Keep history order and cap concurrent requests.
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            items = list(pool.map(fetch, entries[:limit]))
+        return {"items": items, "total": total,
+                "has_next": bool(items) and (len(entries) > limit or (total is not None and start + len(items) < total))}
 
     def match_detail(self, match_id):
         return self.request("/match-details/v1/matches/" + match_id)

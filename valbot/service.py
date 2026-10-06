@@ -1,7 +1,14 @@
 from __future__ import annotations
+import re
 
 from . import flex
 from .riot import RiotClient, offer_item, price, CURRENCIES
+
+MATCH_PAGE_SIZE = 10
+
+
+def is_match_command(command):
+    return re.fullmatch(r"戰績(?:\s+[1-9][0-9]{0,5})?", command) is not None
 
 
 class BotService:
@@ -165,6 +172,43 @@ class BotService:
             cards.append(flex.bubble("近期賽季紀錄", history_rows))
         return flex.carousel(cards)
 
+    def matches(self, page=1):
+        start = (page - 1) * MATCH_PAGE_SIZE
+        result = self.riot.matches_page(start=start, limit=MATCH_PAGE_SIZE)
+        items = result["items"]
+        matches = [x["match"] for x in items if x["match"] is not None]
+        total = result.get("total")
+        if matches:
+            summary = flex.summary_card(matches, self.riot.puuid)
+            summary["header"]["contents"][1]["text"] = f"第 {page} 頁 · 第 {start + 1}–{start + len(items)} 場"
+            summary["body"]["contents"].insert(0, flex.text(f"本頁分析 {len(matches)} 場 · 明細未提供 {len(items) - len(matches)} 場", "xs", flex.MUTED))
+        else:
+            summary = flex.notice("戰績", "此頁沒有可分析的對戰明細。")
+        if total is not None:
+            summary["body"]["contents"].append(flex.text(f"Riot 回報 {total:,} 場紀錄 · 每頁 {MATCH_PAGE_SIZE} 場", "sm", flex.MUTED))
+        controls = []
+        for label, target in (("上一頁", page - 1 if page > 1 else None),
+                              ("下一頁", page + 1 if result["has_next"] else None)):
+            if target:
+                controls.append(flex.box([flex.text(label, "sm", align="center")], flex=1, paddingAll="12px",
+                    backgroundColor=flex.PANEL, cornerRadius="8px",
+                    action={"type": "message", "label": label, "text": f"戰績 {target}"}))
+        if controls:
+            summary["body"]["contents"].append(flex.box(controls, "horizontal", spacing="md"))
+        summary["body"]["contents"].append(flex.text("可輸入「戰績 2」跳頁。統計僅涵蓋本頁；新對戰結算可能改變排序。", "xs", flex.MUTED))
+        try:
+            updates = self.riot.competitive_updates(100) if matches else []
+        except Exception:
+            updates = []
+        lookup = {x["MatchID"]: x for x in updates if x.get("MatchID")} if isinstance(updates, list) else {}
+        cards = [flex.match_card(item["match"], self.riot.puuid, self.assets, title=f"最近第 {start + i} 場",
+                                 rr_update=lookup.get(item["id"])) if item["match"] is not None
+                 else flex.notice(f"最近第 {start + i} 場", "Riot 暫時無法提供此場明細；可翻頁查看其他場次。")
+                 for i, item in enumerate(items, start=1)]
+        # Five detailed cards per carousel keep each payload below LINE's JSON limit.
+        return flex.messages([summary, *[flex.carousel(cards[i:i + 5]) for i in range(0, len(cards), 5)]],
+                             f"Valorant · 戰績第 {page} 頁")
+
     def command(self, command: str):
         command = command.strip()
         if command in {"商店", "夜市", "配件"}:
@@ -173,21 +217,8 @@ class BotService:
             card = self.wallet()
         elif command == "牌位":
             card = self.rank()
-        elif command == "戰績":
-            matches = self.riot.recent_matches()
-            if matches:
-                try:
-                    updates = self.riot.competitive_updates(10)
-                except Exception:
-                    updates = []
-                lookup = {x["MatchID"]: x for x in updates if x.get("MatchID")} if isinstance(updates, list) else {}
-                return flex.messages([flex.summary_card(matches, self.riot.puuid),
-                                      flex.carousel([flex.match_card(match, self.riot.puuid, self.assets,
-                                                                     title=f"最近第 {i} 場",
-                                                                     rr_update=lookup.get((match.get("matchInfo") or {}).get("matchId")))
-                                                     for i, match in enumerate(matches, start=1)])],
-                                     "Valorant · 最近五場戰績分析")
-            card = flex.notice("戰績", "沒有近期對戰。")
+        elif is_match_command(command):
+            return self.matches(int(command.split()[1]) if len(command.split()) > 1 else 1)
         else:
             card = flex.menu()
         return flex.messages([card], "Valorant · " + command[:30])

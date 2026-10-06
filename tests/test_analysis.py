@@ -90,7 +90,8 @@ def test_five_detailed_cards_with_rr_fit_line_payload_and_missing_optional_rr_is
         matches.append(match)
         updates.append({"MatchID": str(i), "RankedRatingEarned": 20, "RankedRatingAfterUpdate": 80,
                         "RankedRatingBeforeUpdate": 60, "RankedRatingPerformanceBonus": 3, "AFKPenalty": 0})
-    riot.recent_matches.return_value = matches
+    riot.matches_page.return_value = {"items": [{"id": str(i), "match": m} for i, m in enumerate(matches)],
+                                     "total": 5, "has_next": False}
     riot.competitive_updates.return_value = updates
     messages = BotService(riot).command("戰績")
     assert len(messages) == 2

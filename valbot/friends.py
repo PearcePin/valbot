@@ -145,7 +145,7 @@ def snapshot_pages(snapshot, page=1, online_only=False):
     friends = [x for x in snapshot["friends"] if x["online"]] if online_only else snapshot["friends"]
     pages = max(1, (len(friends) + PAGE_SIZE - 1) // PAGE_SIZE)
     if not 1 <= page <= pages:
-        return flex.messages([flex.notice("好友列表", "頁碼不存在，請重新按「傳訊息」。")])
+        return flex.messages([flex.notice("好友列表", "頁碼不存在，請重新按「好友」。")])
     items = friends[(page - 1) * PAGE_SIZE:page * PAGE_SIZE]
     label = "本次在 VALORANT 上線" if online_only else "可選擇私訊的 Riot 好友"
     stamp = time.strftime("%H:%M:%S", time.localtime(snapshot["updated_at"]))
@@ -157,7 +157,7 @@ def snapshot_pages(snapshot, page=1, online_only=False):
     if page > 1:
         rows.append(button("上一頁", prefix + str(page - 1)))
     if online_only:
-        rows.append(button("查看全部好友並傳訊息", "傳訊息"))
+        rows.append(button("查看全部好友", "好友"))
     messages = [flex.bubble("好友查詢", rows)]
     if items:
         messages.append(flex.carousel([card(x) for x in items]))
@@ -196,7 +196,7 @@ def send_draft(config, vault, text):
         draft = current_draft(config, vault)
         nonce = text.removeprefix("確認私訊 ")
         if draft.get("status") != "ready" or nonce != draft.get("nonce"):
-            return flex.messages([flex.notice("私訊", "確認已失效或已處理；請重新按「傳訊息」。")])
+            return flex.messages([flex.notice("私訊", "確認已失效或已處理；請重新按「好友」。")])
         # Failures before the send leave the confirmed draft available for retry.
         with connection(config, vault) as (chat, roster):
             tracker = PresenceTracker(roster)
@@ -217,11 +217,10 @@ def send_draft(config, vault, text):
 
 def command(config, vault, text):
     if text in {"好友", "好友提醒", "偵測好友", "傳訊息"}:
-        if text == "傳訊息":
-            with vault.lock("friend_dm"):
-                vault.write("friend_dm", {})
+        with vault.lock("friend_dm"):
+            vault.write("friend_dm", {})
         snapshot = query(config, vault)
-        return snapshot_pages(snapshot, online_only=text != "傳訊息")
+        return snapshot_pages(snapshot)
     if text == "取消私訊":
         with vault.lock("friend_dm"):
             vault.write("friend_dm", {})
@@ -229,7 +228,7 @@ def command(config, vault, text):
     if text.startswith(("私訊好友頁 ", "在線好友頁 ")):
         snapshot = current_snapshot(config, vault)
         if snapshot is None:
-            return flex.messages([flex.notice("好友名單已過期", "請重新按「好友」或「傳訊息」取得最新名單。")])
+            return flex.messages([flex.notice("好友名單已過期", "請重新按「好友」取得最新名單。")])
         try:
             page = int(text.split(" ", 1)[1])
         except ValueError:
@@ -242,7 +241,7 @@ def command(config, vault, text):
             snapshot = current_snapshot(config, vault)
             friend = next((x for x in (snapshot or {}).get("friends", []) if x["key"] == text.split(" ", 1)[1]), None)
             if not friend:
-                return flex.messages([flex.notice("好友選擇已失效", "請重新按「傳訊息」取得最新名單。")])
+                return flex.messages([flex.notice("好友選擇已失效", "請重新按「好友」取得最新名單。")])
             vault.write("friend_dm", {"identity": identity(config), "friend": friend, "status": "composing", "created_at": time.time()})
             return flex.messages([flex.bubble("輸入私訊內容", [flex.text("收件人 · " + display_name(friend), "md", weight="bold"),
                                   flex.text("下一則文字會成為草稿，最多 500 字。預覽後按確認才會送出；10 分鐘內有效。", "sm", flex.MUTED),
@@ -256,4 +255,4 @@ def command(config, vault, text):
             draft.update(status="ready", body=text, nonce=uuid.uuid4().hex)
             vault.write("friend_dm", draft)
             return flex.messages([confirm_card(draft)])
-    return flex.messages([flex.notice("私訊", "請先按「傳訊息」選擇好友。")])
+    return flex.messages([flex.notice("私訊", "請先按「好友」選擇收件人。")])

@@ -15,7 +15,7 @@ from .auth import RiotAuth
 from .line import LineClient
 from .queue import Inbox
 from .riot import RiotClient
-from .service import BotService
+from .service import BotService, is_match_command
 from .storage import Vault
 from . import friends
 
@@ -32,8 +32,9 @@ def process_event(event, config, vault, line):
         messages = flex.messages([flex.menu()])
     elif event.get("type") == "message":
         command = (event.get("message") or {}).get("text", "").strip()
-        friend_command = command in friends.FRIEND_COMMANDS or (command not in COMMANDS and friends.handles(config, vault, command))
-        if command not in COMMANDS and not friend_command:
+        match_command = is_match_command(command)
+        friend_command = command in friends.FRIEND_COMMANDS or (command not in COMMANDS and not match_command and friends.handles(config, vault, command))
+        if command not in COMMANDS and not match_command and not friend_command:
             messages = flex.messages([flex.menu()])
         else:
             try:

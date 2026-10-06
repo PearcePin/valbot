@@ -42,20 +42,20 @@ def test_auth_expiry_retries_with_new_bearer(monkeypatch):
     auth.session.assert_called_with(force=True)
 
 
-def test_recent_matches_requests_five_and_keeps_history_order(monkeypatch):
+def test_recent_matches_requests_ten_and_keeps_history_order(monkeypatch):
     monkeypatch.setattr(Assets, "get", lambda self, path: {"riotClientVersion": "version"})
     paths = []
 
     def handler(request):
         paths.append(str(request.url))
         if "match-history" in request.url.path:
-            assert request.url.params["endIndex"] == "5"
-            return httpx.Response(200, json={"History": [{"MatchID": str(i)} for i in range(6)]})
+            assert request.url.params["endIndex"] == "10"
+            return httpx.Response(200, json={"History": [{"MatchID": str(i)} for i in range(11)]})
         return httpx.Response(200, json={"matchInfo": {"matchId": request.url.path.rsplit("/", 1)[1]}})
 
     auth = Mock()
     auth.session.return_value = {"puuid": "owner", "access_token": "access", "entitlements_token": "ent"}
     with httpx.Client(transport=httpx.MockTransport(handler)) as http:
         matches = RiotClient({"region": "ap"}, auth, http).recent_matches()
-    assert [x["matchInfo"]["matchId"] for x in matches] == ["0", "1", "2", "3", "4"]
-    assert len(paths) == 6
+    assert [x["matchInfo"]["matchId"] for x in matches] == [str(i) for i in range(10)]
+    assert len(paths) == 11
