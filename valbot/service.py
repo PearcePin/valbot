@@ -73,80 +73,97 @@ class BotService:
         return flex.bubble("錢包餘額", cards)
 
     def rank(self):
-        mmr = self.riot.mmr()
-        content = self.riot.content()
-        season = next((x["ID"] for x in content.get("Seasons", [])
-                       if x.get("IsActive") and x.get("Type", "").lower() == "act"), None)
-        seasonal = (mmr.get("QueueSkills") or {}).get("competitive", {}).get("SeasonalInfoBySeasonID") or {}
+        from .analysis import match_time
+        mmr, content = self.riot.mmr(), self.riot.content()
+        seasons = content.get("Seasons") or []
+        season = next((x["ID"] for x in seasons if x.get("IsActive")
+                       and x.get("Type", "").lower() == "act"), None)
+        queue = (mmr.get("QueueSkills") or {}).get("competitive") or {}
+        seasonal = queue.get("SeasonalInfoBySeasonID") or {}
         current = seasonal.get(season) or {}
-        badge = self.assets.rank(current.get("CompetitiveTier", 0))
-        latest = mmr.get("LatestCompetitiveUpdate") or {}
+        tier = current.get("CompetitiveTier", 0)
+        badge = self.assets.rank(tier)
+        rr = current.get("RankedRating")
+        wins = current.get("NumberOfWinsWithPlacements", current.get("NumberOfWins"))
+        games = current.get("NumberOfGames")
+        rate = round(wins / games * 100, 1) if wins is not None and games else None
         details = [flex.text(badge.get("tierName", "未定級"), "xxl", weight="bold"),
-                   flex.text(f"{current.get('RankedRating', 0)} RR", "xl", flex.RED),
-                   flex.progress("牌位進度", current.get("RankedRating", 0), 100)]
-        if latest.get("MatchID"):
-            delta = latest.get("RankedRatingEarned", 0)
-            details.append(flex.text(f"最近競技對戰 {delta:+d} RR", "md",
-                                     flex.GREEN if delta >= 0 else flex.RED))
-            if latest.get("SeasonID") != season:
-                details.append(flex.text("最近競技對戰屬於過往賽季", "xs", flex.MUTED))
+                   flex.text(flex.display(rr, " RR"), "xl", flex.RED),
+                   flex.metrics([("本季場次", games), ("勝場（含定級）" if "NumberOfWinsWithPlacements" in current else "勝場", wins),
+                                 ("本季勝率", flex.display(rate, "%"))])]
+        placements = current.get("GamesNeededForRating", queue.get("CurrentSeasonGamesNeededForRating"))
+        if placements is not None:
+            details.append(flex.text(f"定級剩餘 {placements} 場" if placements else "本季定級已完成", "sm", flex.MUTED))
+        if tier and tier < 24 and rr is not None:
+            details.append(flex.progress("RR 進度", rr, 100))
+        elif tier >= 24:
+            details.append(flex.text("神話／輻能以 RR 與排行榜資格為準", "xs", flex.MUTED))
+        if current.get("LeaderboardRank", 0) > 0:
+            details.append(flex.text(f"排行榜第 {current['LeaderboardRank']:,} 名", "md", flex.GREEN))
+        for key, label in (("NumberOfWins", "勝場（不含定級）"), ("CapstoneWins", "高階勝場"),
+                           ("TotalWinsNeededForRank", "牌位所需勝場")):
+            if key in current:
+                details.append(flex.text(f"{label}：{current[key]}", "xs", flex.MUTED))
+        if "TotalGamesNeededForLeaderboard" in queue:
+            details.append(flex.text(f"排行榜所需總場次：{queue['TotalGamesNeededForLeaderboard']}", "xs", flex.MUTED))
+        winning_tiers = sorted((int(k), v) for k, v in (current.get("WinsByTier") or {}).items()
+                               if str(k).isdigit() and isinstance(v, (int, float)) and v > 0)
+        if winning_tiers:
+            peak_tier = self.assets.rank(winning_tiers[-1][0])
+            details.append(flex.text("本季最高勝場段位：" + peak_tier.get("tierName", str(winning_tiers[-1][0])), "sm", flex.GREEN))
+        for key, label in (("IsLeaderboardAnonymized", "排行榜匿名"), ("IsActRankBadgeHidden", "隱藏賽季徽章")):
+            if key in mmr:
+                details.append(flex.text(label + ("：是" if mmr[key] else "：否"), "xs", flex.MUTED))
         icon = badge.get("largeIcon") or badge.get("smallIcon")
         hero = flex.box([flex.image(icon, size="md", aspectRatio="1:1")],
                         backgroundColor=flex.PANEL, paddingAll="20px") if icon else None
-        return flex.bubble("當前競技牌位", details, hero)
-
-    def missions(self):
-        contracts = self.riot.contracts()
-        missions = contracts.get("Missions") or []
-        if not missions:
-            return flex.notice("任務", "目前沒有可用任務。請登入遊戲更新進度後再查詢。")
-        definitions = {x["uuid"]: x for x in self.assets.get("missions")}
-        cards = []
-        for mission in missions:
-            definition = definitions.get(mission["ID"], {})
-            objectives = definition.get("objectives") or []
-            lookup = {x["objectiveUuid"]: x for x in objectives}
-            contents = [flex.text("已完成" if mission.get("Complete") else "進行中", "sm", flex.GREEN)]
-            for uuid, value in (mission.get("Objectives") or {}).items():
-                objective = lookup.get(uuid, {})
-                contents.append(flex.progress(objective.get("displayName") or "任務目標 " + uuid[:8],
-                                              value, objective.get("value")))
-            if definition.get("xpGrant"):
-                contents.append(flex.text(f"獎勵 {definition['xpGrant']:,} XP", "sm", flex.RED))
-            if mission.get("ExpirationTime"):
-                contents.append(flex.text("截止 " + mission["ExpirationTime"], "xs", flex.MUTED))
-            cards.append(flex.bubble(definition.get("title") or definition.get("displayName")
-                                     or "任務 " + mission["ID"][:8], contents))
+        cards = [flex.bubble("本季競技牌位", details, hero)]
+        # Optional RR endpoint failure must not erase the base rank information.
+        try:
+            updates = self.riot.competitive_updates(10)
+        except Exception:
+            updates = []
+        if not isinstance(updates, list):
+            updates = []
+        latest = mmr.get("LatestCompetitiveUpdate") or {}
+        if not updates and latest.get("MatchID"):
+            updates = [latest]
+        rows = []
+        deltas = [x["RankedRatingEarned"] for x in updates if x.get("SeasonID") == season
+                  and isinstance(x.get("RankedRatingEarned"), (int, float))]
+        if deltas:
+            rows.append(flex.text(f"最近 {len(deltas)} 場本季積分合計 {sum(deltas):+} RR", "lg", flex.GREEN if sum(deltas) >= 0 else flex.RED))
+        for update in updates[:5]:
+            delta = update.get("RankedRatingEarned")
+            label = f"{delta:+} RR" if isinstance(delta, (int, float)) else "RR 未提供"
+            map_info = self.assets.map(update.get("MapID", ""))
+            parts = [flex.text(match_time(update) + " · " + map_info.get("displayName", "對戰"), "xs", flex.MUTED),
+                     flex.text(label, "lg", flex.GREEN if delta is not None and delta >= 0 else flex.RED),
+                     flex.text(f"RR {flex.display(update.get('RankedRatingBeforeUpdate'))} → {flex.display(update.get('RankedRatingAfterUpdate'))}", "sm")]
+            before, after = update.get("TierBeforeUpdate"), update.get("TierAfterUpdate")
+            if before is not None and after is not None:
+                parts.append(flex.text(self.assets.rank(before).get("tierName", str(before)) + " → " +
+                                       self.assets.rank(after).get("tierName", str(after)), "xs", flex.MUTED))
+            parts.append(flex.text("表現加成 " + flex.display(update.get("RankedRatingPerformanceBonus")) +
+                                   " · AFK 懲罰 " + flex.display(update.get("AFKPenalty")), "xs", flex.MUTED))
+            if update.get("SeasonID") != season:
+                parts.append(flex.text("此場屬於其他賽季", "xxs", flex.MUTED))
+            rows.append(flex.box(parts, spacing="sm", paddingAll="10px", backgroundColor=flex.PANEL, cornerRadius="8px"))
+        cards.append(flex.bubble("近期競技 RR 變動", rows or [flex.text("尚無競技積分紀錄", "sm", flex.MUTED)]))
+        history_rows = []
+        # Riot content provides chronological acts; retain the latest six with account records.
+        acts = [x for x in seasons if x.get("Type", "").lower() == "act" and x.get("ID") in seasonal]
+        acts.sort(key=lambda x: x.get("StartTime", ""), reverse=True)
+        for act in acts[:6]:
+            record = seasonal[act["ID"]]
+            old_badge = self.assets.rank(record.get("CompetitiveTier", 0))
+            history_rows.append(flex.box([flex.text(act.get("Name") or act["ID"][:8], "sm", weight="bold"),
+                                         flex.text(old_badge.get("tierName", "未定級") + " · " + flex.display(record.get("RankedRating"), " RR"), "md"),
+                                         flex.text(f"{flex.display(record.get('NumberOfGames'))} 場 · {flex.display(record.get('NumberOfWinsWithPlacements', record.get('NumberOfWins')))} 勝", "xs", flex.MUTED)],
+                                        paddingAll="10px", backgroundColor=flex.PANEL, cornerRadius="8px"))
+        if history_rows:
+            cards.append(flex.bubble("近期賽季紀錄", history_rows))
         return flex.carousel(cards)
-
-    def battlepass(self):
-        contracts = self.riot.contracts()
-        content = self.riot.content()
-        active = {x["ID"] for x in content.get("Seasons", []) if x.get("IsActive")}
-        definitions = self.assets.get("contracts")
-        definition = next((x for x in definitions if (x.get("content") or {}).get("relationType") == "Season"
-                           and (x.get("content") or {}).get("relationUuid") in active), None)
-        if not definition:
-            return flex.notice("通行證", "公開圖庫尚未提供本期通行證，請稍後再試。")
-        account = next((x for x in contracts.get("Contracts", [])
-                        if x["ContractDefinitionID"] == definition["uuid"]), {})
-        levels = [level for chapter in definition["content"].get("chapters", [])
-                  for level in chapter.get("levels", [])]
-        reached = account.get("ProgressionLevelReached", 0)
-        next_level = levels[reached] if reached < len(levels) else None
-        contents = [flex.text(f"等級 {reached} / {len(levels)}", "xxl", weight="bold")]
-        if next_level:
-            contents.append(flex.progress("距離下一階", account.get("ProgressionTowardsNextLevel", 0),
-                                          next_level.get("xp")))
-            reward = next_level.get("reward") or {}
-            if reward.get("uuid"):
-                item = self.assets.item(reward["uuid"])
-                contents.append(flex.text("下一階獎勵 · " + item["name"], "sm", flex.MUTED))
-                if item.get("image"):
-                    contents.append(flex.image(item["image"], aspectRatio="16:9"))
-        else:
-            contents.append(flex.text("本期進度已完成", "md", flex.GREEN))
-        return flex.bubble(definition["displayName"], contents)
 
     def command(self, command: str):
         command = command.strip()
@@ -158,14 +175,19 @@ class BotService:
             card = self.rank()
         elif command == "戰績":
             matches = self.riot.recent_matches()
-            card = flex.carousel([flex.match_card(match, self.riot.puuid, self.assets,
-                                                  title=f"最近第 {i} 場")
-                                  for i, match in enumerate(matches, start=1)]) \
-                if matches else flex.notice("戰績", "沒有近期對戰。")
-        elif command == "任務":
-            card = self.missions()
-        elif command == "通行證":
-            card = self.battlepass()
+            if matches:
+                try:
+                    updates = self.riot.competitive_updates(10)
+                except Exception:
+                    updates = []
+                lookup = {x["MatchID"]: x for x in updates if x.get("MatchID")} if isinstance(updates, list) else {}
+                return flex.messages([flex.summary_card(matches, self.riot.puuid),
+                                      flex.carousel([flex.match_card(match, self.riot.puuid, self.assets,
+                                                                     title=f"最近第 {i} 場",
+                                                                     rr_update=lookup.get((match.get("matchInfo") or {}).get("matchId")))
+                                                     for i, match in enumerate(matches, start=1)])],
+                                     "Valorant · 最近五場戰績分析")
+            card = flex.notice("戰績", "沒有近期對戰。")
         else:
             card = flex.menu()
         return flex.messages([card], "Valorant · " + command[:30])

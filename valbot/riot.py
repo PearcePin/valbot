@@ -69,18 +69,26 @@ class RiotClient:
     def wallet(self):
         return self.request(f"/store/v1/wallet/{self.puuid}")
 
-    def contracts(self):
-        return self.request(f"/contracts/v1/contracts/{self.puuid}")
-
     def content(self):
         return self.request("/content-service/v3/content", shared=True)
 
     def recent_matches(self, limit=5):
         if not 1 <= limit <= 5:
             raise ValueError("戰績查詢數量須為 1 至 5 場。")
-        history = self.request(f"/match-history/v1/history/{self.puuid}?startIndex=0&endIndex={limit}")
-        return [self.request("/match-details/v1/matches/" + entry["MatchID"])
-                for entry in (history.get("History") or [])[:limit]]
+        return [self.match_detail(entry["MatchID"]) for entry in self.match_history(limit)]
+
+    def match_history(self, limit=10):
+        if not 1 <= limit <= 100:
+            raise ValueError("戰績紀錄數量須為 1 至 100 場。")
+        return (self.request(f"/match-history/v1/history/{self.puuid}?startIndex=0&endIndex={limit}")
+                .get("History") or [])[:limit]
+
+    def match_detail(self, match_id):
+        return self.request("/match-details/v1/matches/" + match_id)
+
+    def competitive_updates(self, limit=10):
+        return (self.request(f"/mmr/v1/players/{self.puuid}/competitiveupdates?startIndex=0&endIndex={limit}&queue=competitive")
+                .get("Matches") or [])[:limit]
 
     def mmr(self):
         return self.request(f"/mmr/v1/players/{self.puuid}")

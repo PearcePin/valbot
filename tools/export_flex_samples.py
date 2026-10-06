@@ -41,10 +41,8 @@ def main():
                             flex.progress("RR", 68, 100), flex.text("最近一場 +22 RR", "md", flex.GREEN)],
                            flex.box([flex.image(badge["largeIcon"], size="md", aspectRatio="1:1")],
                                     backgroundColor=flex.PANEL, paddingAll="20px"))
-        mission = flex.bubble("任務 · 示範數據", [flex.progress("造成傷害", 12500, 18000),
-                                                flex.text("獎勵 12,000 XP", "sm", flex.RED)])
         messages = flex.messages([flex.menu(), flex.carousel(daily), flex.carousel(night), accessory,
-                                  flex.match_card(match, "demo", assets), rank, mission], "Valorant Flex 示範")
+                                  flex.summary_card([match], "demo"), flex.match_card(match, "demo", assets), rank], "Valorant Flex 示範")
         LineClient.models(messages)
     directory = ROOT / "examples"
     directory.mkdir(exist_ok=True)

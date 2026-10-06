@@ -258,7 +258,7 @@
                 "contents": [
                   {
                     "type": "text",
-                    "text": "任務",
+                    "text": "自動戰報",
                     "size": "lg",
                     "color": "#F1F5F9",
                     "wrap": true,
@@ -266,7 +266,7 @@
                   },
                   {
                     "type": "text",
-                    "text": "本期目標",
+                    "text": "賽後推播開關",
                     "size": "xs",
                     "color": "#A5B4C3",
                     "wrap": true
@@ -278,47 +278,10 @@
                 "cornerRadius": "12px",
                 "action": {
                   "type": "message",
-                  "label": "任務",
-                  "text": "任務"
+                  "label": "自動戰報",
+                  "text": "自動戰報"
                 }
               },
-              {
-                "type": "box",
-                "layout": "vertical",
-                "contents": [
-                  {
-                    "type": "text",
-                    "text": "通行證",
-                    "size": "lg",
-                    "color": "#F1F5F9",
-                    "wrap": true,
-                    "weight": "bold"
-                  },
-                  {
-                    "type": "text",
-                    "text": "等級與獎勵",
-                    "size": "xs",
-                    "color": "#A5B4C3",
-                    "wrap": true
-                  }
-                ],
-                "flex": 1,
-                "paddingAll": "12px",
-                "backgroundColor": "#1B2935",
-                "cornerRadius": "12px",
-                "action": {
-                  "type": "message",
-                  "label": "通行證",
-                  "text": "通行證"
-                }
-              }
-            ],
-            "spacing": "md"
-          },
-          {
-            "type": "box",
-            "layout": "horizontal",
-            "contents": [
               {
                 "type": "box",
                 "layout": "vertical",
@@ -348,7 +311,14 @@
                   "label": "好友",
                   "text": "好友"
                 }
-              },
+              }
+            ],
+            "spacing": "md"
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
               {
                 "type": "box",
                 "layout": "vertical",
@@ -1454,6 +1424,212 @@
           },
           {
             "type": "text",
+            "text": "近 1 場 · 表現總覽",
+            "size": "xl",
+            "color": "#F1F5F9",
+            "wrap": true,
+            "weight": "bold",
+            "margin": "md"
+          }
+        ]
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "勝 / 敗 / 和",
+                    "size": "xxs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  },
+                  {
+                    "type": "text",
+                    "text": "1 / 0 / 0",
+                    "size": "md",
+                    "color": "#F1F5F9",
+                    "wrap": true,
+                    "weight": "bold"
+                  }
+                ],
+                "flex": 1
+              },
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "勝率",
+                    "size": "xxs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  },
+                  {
+                    "type": "text",
+                    "text": "100.0%",
+                    "size": "md",
+                    "color": "#F1F5F9",
+                    "wrap": true,
+                    "weight": "bold"
+                  }
+                ],
+                "flex": 1
+              }
+            ],
+            "spacing": "sm",
+            "paddingAll": "10px",
+            "backgroundColor": "#1B2935",
+            "cornerRadius": "8px"
+          },
+          {
+            "type": "text",
+            "text": "累計 K / D / A",
+            "size": "xs",
+            "color": "#A5B4C3",
+            "wrap": true
+          },
+          {
+            "type": "text",
+            "text": "24 / 15 / 7",
+            "size": "xl",
+            "color": "#F1F5F9",
+            "wrap": true,
+            "weight": "bold"
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "加權 ACS",
+                    "size": "xxs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  },
+                  {
+                    "type": "text",
+                    "text": "270.0",
+                    "size": "md",
+                    "color": "#F1F5F9",
+                    "wrap": true,
+                    "weight": "bold"
+                  }
+                ],
+                "flex": 1
+              },
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "加權 ADR",
+                    "size": "xxs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  },
+                  {
+                    "type": "text",
+                    "text": "—",
+                    "size": "md",
+                    "color": "#F1F5F9",
+                    "wrap": true,
+                    "weight": "bold"
+                  }
+                ],
+                "flex": 1
+              },
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "爆頭比例",
+                    "size": "xxs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  },
+                  {
+                    "type": "text",
+                    "text": "—",
+                    "size": "md",
+                    "color": "#F1F5F9",
+                    "wrap": true,
+                    "weight": "bold"
+                  }
+                ],
+                "flex": 1
+              }
+            ],
+            "spacing": "sm",
+            "paddingAll": "10px",
+            "backgroundColor": "#1B2935",
+            "cornerRadius": "8px"
+          },
+          {
+            "type": "text",
+            "text": "ACS、ADR 以回合數加權；爆頭比例以命中數加權。不同模式混合時僅供觀察。",
+            "size": "xs",
+            "color": "#A5B4C3",
+            "wrap": true
+          },
+          {
+            "type": "text",
+            "text": "勝負未提供 0 場；— 表示資料不足。",
+            "size": "xxs",
+            "color": "#A5B4C3",
+            "wrap": true
+          }
+        ],
+        "spacing": "md",
+        "paddingAll": "20px"
+      }
+    }
+  },
+  {
+    "type": "flex",
+    "altText": "Valorant Flex 示範",
+    "contents": {
+      "type": "bubble",
+      "size": "mega",
+      "styles": {
+        "body": {
+          "backgroundColor": "#101923"
+        },
+        "header": {
+          "backgroundColor": "#101923"
+        }
+      },
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "VALORANT / PERSONAL ASSISTANT",
+            "size": "xxs",
+            "color": "#FF4655",
+            "wrap": true,
+            "weight": "bold"
+          },
+          {
+            "type": "text",
             "text": "對戰結算 · 示範 competitive",
             "size": "xl",
             "color": "#F1F5F9",
@@ -1524,6 +1700,157 @@
                 "flex": 1
               }
             ]
+          },
+          {
+            "type": "text",
+            "text": "時間未提供",
+            "size": "xs",
+            "color": "#A5B4C3",
+            "wrap": true
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "ADR",
+                    "size": "xxs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  },
+                  {
+                    "type": "text",
+                    "text": "—",
+                    "size": "md",
+                    "color": "#F1F5F9",
+                    "wrap": true,
+                    "weight": "bold"
+                  }
+                ],
+                "flex": 1
+              },
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "爆頭命中比例",
+                    "size": "xxs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  },
+                  {
+                    "type": "text",
+                    "text": "—",
+                    "size": "md",
+                    "color": "#F1F5F9",
+                    "wrap": true,
+                    "weight": "bold"
+                  }
+                ],
+                "flex": 1
+              },
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "K/D",
+                    "size": "xxs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  },
+                  {
+                    "type": "text",
+                    "text": "1.6",
+                    "size": "md",
+                    "color": "#F1F5F9",
+                    "wrap": true,
+                    "weight": "bold"
+                  }
+                ],
+                "flex": 1
+              }
+            ],
+            "spacing": "sm",
+            "paddingAll": "10px",
+            "backgroundColor": "#1B2935",
+            "cornerRadius": "8px"
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "首殺 / 首死",
+                    "size": "xxs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  },
+                  {
+                    "type": "text",
+                    "text": "— / —",
+                    "size": "md",
+                    "color": "#F1F5F9",
+                    "wrap": true,
+                    "weight": "bold"
+                  }
+                ],
+                "flex": 1
+              },
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "安裝 / 拆除",
+                    "size": "xxs",
+                    "color": "#A5B4C3",
+                    "wrap": true
+                  },
+                  {
+                    "type": "text",
+                    "text": "— / —",
+                    "size": "md",
+                    "color": "#F1F5F9",
+                    "wrap": true,
+                    "weight": "bold"
+                  }
+                ],
+                "flex": 1
+              }
+            ],
+            "spacing": "sm",
+            "paddingAll": "10px",
+            "backgroundColor": "#1B2935",
+            "cornerRadius": "8px"
+          },
+          {
+            "type": "text",
+            "text": "ACS 排名 1 / 1 · 22 回合",
+            "size": "sm",
+            "color": "#52D8A0",
+            "wrap": true
+          },
+          {
+            "type": "text",
+            "text": "爆頭比例＝頭部命中 / 全部部位命中；— 表示資料未提供。",
+            "size": "xxs",
+            "color": "#A5B4C3",
+            "wrap": true
           }
         ],
         "spacing": "md",
@@ -1718,102 +2045,6 @@
           }
         ],
         "backgroundColor": "#1B2935",
-        "paddingAll": "20px"
-      }
-    }
-  },
-  {
-    "type": "flex",
-    "altText": "Valorant Flex 示範",
-    "contents": {
-      "type": "bubble",
-      "size": "mega",
-      "styles": {
-        "body": {
-          "backgroundColor": "#101923"
-        },
-        "header": {
-          "backgroundColor": "#101923"
-        }
-      },
-      "header": {
-        "type": "box",
-        "layout": "vertical",
-        "contents": [
-          {
-            "type": "text",
-            "text": "VALORANT / PERSONAL ASSISTANT",
-            "size": "xxs",
-            "color": "#FF4655",
-            "wrap": true,
-            "weight": "bold"
-          },
-          {
-            "type": "text",
-            "text": "任務 · 示範數據",
-            "size": "xl",
-            "color": "#F1F5F9",
-            "wrap": true,
-            "weight": "bold",
-            "margin": "md"
-          }
-        ]
-      },
-      "body": {
-        "type": "box",
-        "layout": "vertical",
-        "contents": [
-          {
-            "type": "box",
-            "layout": "vertical",
-            "contents": [
-              {
-                "type": "text",
-                "text": "造成傷害",
-                "size": "md",
-                "color": "#F1F5F9",
-                "wrap": true,
-                "weight": "bold"
-              },
-              {
-                "type": "text",
-                "text": "12,500 / 18,000",
-                "size": "sm",
-                "color": "#A5B4C3",
-                "wrap": true
-              },
-              {
-                "type": "box",
-                "layout": "vertical",
-                "contents": [
-                  {
-                    "type": "box",
-                    "layout": "vertical",
-                    "contents": [],
-                    "backgroundColor": "#52D8A0",
-                    "width": "69%",
-                    "height": "6px"
-                  }
-                ],
-                "backgroundColor": "#1B2935",
-                "height": "6px",
-                "cornerRadius": "3px"
-              }
-            ],
-            "spacing": "sm",
-            "paddingAll": "12px",
-            "backgroundColor": "#1B2935",
-            "cornerRadius": "10px"
-          },
-          {
-            "type": "text",
-            "text": "獎勵 12,000 XP",
-            "size": "sm",
-            "color": "#FF4655",
-            "wrap": true
-          }
-        ],
-        "spacing": "md",
         "paddingAll": "20px"
       }
     }

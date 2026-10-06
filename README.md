@@ -10,10 +10,9 @@
 | 夜市 | 開放時六把武器、原價、折扣與折後價 |
 | 配件 | 本週卡面、吊飾、噴漆與 KC 價格 |
 | 錢包 | VP／RP／KC 餘額 |
-| 戰績 | 最近五場輪播：地圖背景、圓形特務頭像、勝負色、比分、K/D/A、ACS |
-| 牌位 | 本期段位徽章、RR 與最近競技對戰 RR 變動 |
-| 任務 | 任務目標、進度條、XP 與到期時間 |
-| 通行證 | 本期等級、下一階 XP 與獎勵圖片 |
+| 戰績 | 近五場總覽＋逐場輪播：勝率、K/D/A、ACS、ADR、爆頭比例、首殺／首死、多殺、安裝／拆除、ACS 排名、技能次數與經濟 |
+| 牌位 | 本季徽章與 RR、勝場／場次／勝率、定級進度、排行榜、最高勝場段位、近期 RR／加成／AFK 懲罰及賽季紀錄 |
+| 自動戰報 | 賽後完整戰績推播、監聽狀態與開關 |
 | 好友 | 目前偵測到正在玩 VALORANT 的好友 |
 | 好友提醒 | 監聽連線狀態、推播開關 |
 
@@ -22,6 +21,10 @@
 好友上線提醒預設開啟，使用目前帳號的 access token 換 PAS token，再用 TLS 連接 Riot XMPP；Ubuntu 不需要 Riot Client。只有「互為好友、離線轉為在 VALORANT 上線」時推播，Riot Mobile 常駐狀態不算；首次連線／重連有 25 秒快照暖機，不推播原本已在線的好友。每位好友每 10 分鐘最多通知一次，多裝置不會重複提醒。輸入 **好友提醒開啟／好友提醒關閉** 可切換，輸入 **好友提醒** 查看是否已連線或失敗原因。關閉也會結束監聽連線。此非官方功能仍需部署後實測，網路必須允許 Riot 聊天 TCP 5223。建立聊天連線可能使你的 Riot 帳號顯示在線；推播會使用 LINE 額度。錯誤會重試，friend alerts／preferences／快照皆加密保存在 data/，不記錄 raw token 或聊天內容。
 
 更多可考慮的功能見 [功能候選清單](docs/feature-catalog.md)，目前只實作上表及好友提醒。
+
+自動戰報預設開啟，與 Webhook 服務一起執行，每 **60 秒**查詢戰績紀錄；Riot 提供 `isCompleted` 完整結算後，依 **指令中心 → 賽後戰報** 推送。首次啟動或手動切換開關先建立歷史紀錄，不補發舊對戰；平常重啟保留紀錄，可補發停止期間最近 100 場內的新對戰。輸入 **自動戰報開啟／自動戰報關閉** 切換，輸入 **自動戰報** 查看狀態。推播使用 LINE 額度，主機與登入需持續有效；API 結算延遲時會稍後重試。待送 payload 與固定 retry key 加密保存，LINE 已接受的重試不重複推播；超過 23 小時仍無法確定送達的待送訊息會跳過，避免 retry key 到期後重複。
+
+分析僅使用 API 實際資料。ACS＝分數／回合、ADR＝傷害／回合；爆頭比例＝頭部命中／頭身腿全部命中（不是射擊命中率）。近五場 ACS／ADR 依回合數加權，爆頭比例依命中數加權；回合明細不完整時顯示「—」。ACS 排名依本場所有玩家 ACS，比較不同模式需留意差異。神話／輻能不顯示誤導的 100 RR 晉級進度條。本版本已移除任務與通行證，輸入舊指令會回到指令中心。
 
 ## 一行指令安裝
 
@@ -90,7 +93,7 @@ Channel Secret 是 Webhook 驗證所必需，與 Access Token 不同。LINE 額�
 
 ## Riot 登入與資料限制
 
-商店、餘額、任務使用遊戲的**非官方私有端點**，並非 Riot 正式開放的商店 API。Riot 可能調整登入、要求 CAPTCHA 或封鎖直接帳密登入；程式不會繞過驗證。帳密模式支援最多三次 2FA，失敗時切換瀏覽器模式。預設使用新版 `riot_identity`／`multifactor.otp` 欄位，舊協定可用 `setup.py --legacy-auth`。
+商店、餘額、戰績使用遊戲的**非官方私有端點**，並非 Riot 正式開放的商店 API。Riot 可能調整登入、要求 CAPTCHA 或封鎖直接帳密登入；程式不會繞過驗證。帳密模式支援最多三次 2FA，失敗時切換瀏覽器模式。預設使用新版 `riot_identity`／`multifactor.otp` 欄位，舊協定可用 `setup.py --legacy-auth`。
 
 **登入步驟與 ssid 具體位置：[docs/login.md](docs/login.md)。** Windows 可執行 `python setup.py --login-method local` 自動讀取自己的 Riot Client 登入；每日推播時 Client 需保持登入並開啟，token 過期會重新向本機 Client 取得，不需要 Cookie。切換 Riot 帳號時會拒絕沿用別人的工作階段。
 
@@ -98,7 +101,7 @@ Channel Secret 是 Webhook 驗證所必需，與 Access Token 不同。LINE 額�
 
 進階網址模式支援含 `access_token` 的 playvalorant.com 跳轉網址（含 www／語言路徑／結尾斜線），驗證成功才詢問可選的 ssid。沒有 ssid 的網址 token 通常約一小時有效，**不適合每日無人值守排程**。Cookie 也可能失效；重新執行 `setup.py` 登入即可。不要分享跳轉網址、Cookie 或 Token。
 
-圖片與繁體中文 UUID 資料來自 [Valorant-API](https://valorant-api.com/)。公開圖庫可能落後最新版本；未知圖片或價格會明示未提供，不推算虛假資訊。任務可能只回傳週任務，遊戲內每日 checkpoints 不保證有提供。通行證依本期 Season 關聯識別，圖庫落後時顯示尚未提供。
+圖片與繁體中文 UUID 資料來自 [Valorant-API](https://valorant-api.com/)。公開圖庫可能落後最新版本；未知圖片或價格會明示未提供，不推算虛假資訊。
 
 ## Webhook 部署
 

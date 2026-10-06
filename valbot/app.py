@@ -17,10 +17,10 @@ from .queue import Inbox
 from .riot import RiotClient
 from .service import BotService
 from .storage import Vault
-from . import friends
+from . import friends, reports
 
 log = logging.getLogger("valbot")
-COMMANDS = {"商店", "夜市", "配件", "錢包", "戰績", "牌位", "任務", "通行證"} | friends.FRIEND_COMMANDS
+COMMANDS = {"商店", "夜市", "配件", "錢包", "戰績", "牌位"} | friends.FRIEND_COMMANDS | reports.REPORT_COMMANDS
 
 
 def process_event(event, config, vault, line):
@@ -38,6 +38,8 @@ def process_event(event, config, vault, line):
             try:
                 if command in friends.FRIEND_COMMANDS:
                     messages = friends.command(vault, command)
+                elif command in reports.REPORT_COMMANDS:
+                    messages = reports.command(vault, command)
                 else:
                     with httpx.Client(timeout=12) as client:
                         messages = BotService(RiotClient(config, RiotAuth(vault), client)).command(command)
@@ -91,16 +93,23 @@ def create_app(config=None, vault=None, line=None):
         thread = threading.Thread(target=worker, args=(app,), daemon=True, name="valbot-inbox")
         thread.start()
         friend_thread = None
+        report_thread = None
         if app.state.config.get("line_access_token"):
             friend_thread = threading.Thread(target=friends.worker,
                                             args=(app.state.config, app.state.vault, stop),
                                             daemon=True, name="valbot-friends")
             friend_thread.start()
+            report_thread = threading.Thread(target=reports.worker,
+                                            args=(app.state.config, app.state.vault, stop),
+                                            daemon=True, name="valbot-reports")
+            report_thread.start()
         yield
         stop.set()
         await run_in_threadpool(thread.join, 2)
         if friend_thread:
             await run_in_threadpool(friend_thread.join, 2)
+        if report_thread:
+            await run_in_threadpool(report_thread.join, 2)
 
     app = FastAPI(title="Valorant LINE Bot", lifespan=lifespan, docs_url=None, redoc_url=None)
 

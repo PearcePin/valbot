@@ -203,7 +203,7 @@ def configure(vault, staged_vault, args):
             raise RuntimeError("Riot 回應未含商店；請確認區域與帳號。")
         # Prewarm public assets to reduce webhook reply latency on first query.
         for endpoint in ("weapons/skins", "buddies", "playercards", "sprays", "playertitles", "currencies",
-                         "bundles", "maps", "agents", "competitivetiers", "missions", "contracts"):
+                         "bundles", "maps", "agents", "competitivetiers"):
             riot.assets.get(endpoint)
     line = LineClient(config["line_access_token"])
     line.validate_token()

@@ -19,6 +19,8 @@ def fake_riot():
     riot.assets.item.side_effect = lambda uuid: {"name": "測試物品 " + uuid,
                                                 "image": "https://media.valorant-api.com/example.png"}
     riot.assets.lookup.return_value = {"displayName": "精選包", "displayIcon": "https://example.com/bundle.png"}
+    riot.assets.map.return_value = {}
+    riot.competitive_updates.return_value = []
     return riot
 
 
@@ -70,15 +72,13 @@ def test_match_uses_own_team_and_correct_acs():
     LineClient.models(flex.messages([card]))
 
 
-def test_missions_use_public_objective_uuid_and_goal():
+@pytest.mark.parametrize("command", ["任務", "通行證"])
+def test_retired_commands_only_show_menu(command):
+    from valbot.app import COMMANDS
     riot = fake_riot()
-    riot.contracts.return_value = {"Missions": [{"ID": "mission", "Objectives": {"objective": 25}}]}
-    riot.assets.get.return_value = [{"uuid": "mission", "title": "造成傷害", "xpGrant": 12000,
-                                     "objectives": [{"objectiveUuid": "objective", "value": 100}]}]
-    card = BotService(riot).missions()["contents"][0]
-    assert card["header"]["contents"][1]["text"] == "造成傷害"
-    assert card["body"]["contents"][1]["contents"][1]["text"] == "25 / 100"
-    LineClient.models(flex.messages([card]))
+    assert command not in COMMANDS
+    assert BotService(riot).command(command)[0]["contents"] == flex.menu()
+    riot.request.assert_not_called()
 
 
 def test_current_rank_does_not_use_last_seasons_rank():
@@ -101,8 +101,9 @@ def test_recent_match_carousel_handles_available_history(count):
         {"subject": "owner", "teamId": "Red", "stats": {"score": 2000, "roundsPlayed": 10}}]}
     riot.recent_matches.return_value = [match] * count
     messages = BotService(riot).command("戰績")
-    contents = messages[0]["contents"]
+    contents = messages[-1]["contents"]
     if count:
+        assert len(messages) == 2
         assert contents["type"] == "carousel"
         assert len(contents["contents"]) == count
         assert contents["contents"][0]["header"]["contents"][1]["text"] == "最近第 1 場 · competitive"
