@@ -1,4 +1,4 @@
-"""Read Riot friend presence over validated TLS. No friend/chat mutation endpoints."""
+"""On-demand Riot roster/presence and explicit private messages over validated TLS."""
 import base64
 from collections import deque
 import json
@@ -126,12 +126,20 @@ class RiotChat:
         self.creds, self.stop = creds, stop
         self.socket = None
         self.xml = XmlStream()
+        self.deferred = deque()
+        self.connect_deadline = None
+        self.allowed_friends = set()
 
     def send(self, element):
         data = element if isinstance(element, bytes) else ET.tostring(element, encoding="utf-8")
         self.socket.sendall(data)
 
     def read(self, seconds=30):
+        if self.deferred:
+            return self.deferred.popleft()
+        return self._read(seconds)
+
+    def _read(self, seconds=30):
         deadline = time.monotonic() + seconds
         while not self.stop.is_set() and time.monotonic() < deadline:
             if self.xml.pending:
@@ -146,15 +154,19 @@ class RiotChat:
         return None
 
     def expect(self, tag, stanza_id=None):
-        deadline = time.monotonic() + 30
+        deadline = min(time.monotonic() + 30, self.connect_deadline or float("inf"))
         while time.monotonic() < deadline and not self.stop.is_set():
-            stanza = self.read(min(5, max(1, deadline - time.monotonic())))
+            stanza = self._read(min(5, max(0.1, deadline - time.monotonic())))
             if stanza is None:
                 continue
             if local_tag(stanza.tag) in {"failure", "error"} or stanza.get("type") == "error":
                 raise ChatError("XMPP 驗證／請求被拒絕")
             if local_tag(stanza.tag) == tag and (stanza_id is None or stanza.get("id") == stanza_id):
                 return stanza
+            if local_tag(stanza.tag) == "presence" or (local_tag(stanza.tag) == "iq" and stanza.get("type") == "set"):
+                if len(self.deferred) >= 2000:
+                    raise ChatError("好友狀態資料過多")
+                self.deferred.append(stanza)
         raise ChatError("XMPP 驗證逾時")
 
     def open_stream(self):
@@ -165,7 +177,8 @@ class RiotChat:
         return features
 
     def connect(self):
-        raw = socket.create_connection((self.creds["host"], self.creds["port"]), timeout=15)
+        self.connect_deadline = time.monotonic() + 20
+        raw = socket.create_connection((self.creds["host"], self.creds["port"]), timeout=10)
         try:
             self.socket = ssl.create_default_context().wrap_socket(raw, server_hostname=self.creds["host"])
         except Exception:
@@ -194,8 +207,31 @@ class RiotChat:
         ET.SubElement(iq, "query", {"xmlns": "jabber:iq:riotgames:roster", "last_state": "true"})
         self.send(iq)
         roster = self.expect("iq", "valbot-roster")
+        query = child(roster, "query")
+        if query is None or "riotgames:roster" not in query.tag:
+            raise ChatError("未取得 Riot 好友名單")
+        self.allowed_friends = {item.get("jid", "").split("/", 1)[0] for item in query
+                                if local_tag(item.tag) == "item" and item.get("subscription") == "both"}
         self.send(ET.Element("presence"))
         return roster
+
+    def send_message(self, jid, body, message_id):
+        if jid not in self.allowed_friends or not re.fullmatch(r"[0-9a-fA-F-]{36}@[a-z0-9-]+\.pvp\.net", jid):
+            raise ChatError("對象不是目前帳號的 Riot 好友")
+        validate_body(body)
+        stanza = ET.Element("message", {"to": jid, "type": "chat", "id": message_id})
+        ET.SubElement(stanza, "body").text = body
+        self.send(stanza)
+        # Routing errors may arrive; silence is not a delivery/read receipt.
+        deadline = time.monotonic() + 2
+        while time.monotonic() < deadline:
+            response = self.read(seconds=max(0.1, deadline - time.monotonic()))
+            if response is None:
+                continue
+            if local_tag(response.tag) in {"error", "failure"} or (
+                local_tag(response.tag) == "message" and response.get("type") == "error"
+                and (response.get("id") == message_id or response.get("from", "").split("/", 1)[0] == jid)):
+                raise ChatError("Riot 拒絕此私訊")
 
     def heartbeat(self):
         self.send(b" ")
@@ -203,3 +239,11 @@ class RiotChat:
     def close(self):
         if self.socket:
             self.socket.close()
+
+
+def validate_body(body):
+    if not isinstance(body, str) or not body.strip() or len(body) > 500:
+        raise ChatError("訊息須為 1 至 500 個字")
+    if any(not (c in "\t\n\r" or 0x20 <= ord(c) <= 0xD7FF or 0xE000 <= ord(c) <= 0xFFFD
+                or 0x10000 <= ord(c) <= 0x10FFFF) for c in body):
+        raise ChatError("訊息包含不支援的控制字元")

@@ -32,12 +32,13 @@ def process_event(event, config, vault, line):
         messages = flex.messages([flex.menu()])
     elif event.get("type") == "message":
         command = (event.get("message") or {}).get("text", "").strip()
-        if command not in COMMANDS:
+        friend_command = command in friends.FRIEND_COMMANDS or (command not in COMMANDS and friends.handles(config, vault, command))
+        if command not in COMMANDS and not friend_command:
             messages = flex.messages([flex.menu()])
         else:
             try:
-                if command in friends.FRIEND_COMMANDS:
-                    messages = friends.command(vault, command)
+                if friend_command:
+                    messages = friends.command(config, vault, command)
                 else:
                     with httpx.Client(timeout=12) as client:
                         messages = BotService(RiotClient(config, RiotAuth(vault), client)).command(command)
@@ -90,17 +91,9 @@ def create_app(config=None, vault=None, line=None):
         stop.clear()
         thread = threading.Thread(target=worker, args=(app,), daemon=True, name="valbot-inbox")
         thread.start()
-        friend_thread = None
-        if app.state.config.get("line_access_token"):
-            friend_thread = threading.Thread(target=friends.worker,
-                                            args=(app.state.config, app.state.vault, stop),
-                                            daemon=True, name="valbot-friends")
-            friend_thread.start()
         yield
         stop.set()
         await run_in_threadpool(thread.join, 2)
-        if friend_thread:
-            await run_in_threadpool(friend_thread.join, 2)
 
     app = FastAPI(title="Valorant LINE Bot", lifespan=lifespan, docs_url=None, redoc_url=None)
 

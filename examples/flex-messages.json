@@ -266,7 +266,7 @@
                   },
                   {
                     "type": "text",
-                    "text": "遊戲在線好友",
+                    "text": "手動偵測在線好友",
                     "size": "xs",
                     "color": "#A5B4C3",
                     "wrap": true
@@ -288,7 +288,7 @@
                 "contents": [
                   {
                     "type": "text",
-                    "text": "好友提醒",
+                    "text": "傳訊息",
                     "size": "lg",
                     "color": "#F1F5F9",
                     "wrap": true,
@@ -296,7 +296,7 @@
                   },
                   {
                     "type": "text",
-                    "text": "上線推播開關",
+                    "text": "私訊 Riot 好友",
                     "size": "xs",
                     "color": "#A5B4C3",
                     "wrap": true
@@ -308,8 +308,8 @@
                 "cornerRadius": "12px",
                 "action": {
                   "type": "message",
-                  "label": "好友提醒",
-                  "text": "好友提醒"
+                  "label": "傳訊息",
+                  "text": "傳訊息"
                 }
               }
             ],

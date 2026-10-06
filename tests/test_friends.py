@@ -27,62 +27,37 @@ def presence(resource="PC", available=True, valorant=True, activity="MENUS"):
                          + f'><games>{game}</games></presence>')
 
 
-def test_startup_snapshot_does_not_notify_existing_online_friends():
-    tracker = friends.PresenceTracker(roster(), 100)
-    assert tracker.apply(presence(), 101) is None
-    assert len(tracker.online()) == 1
-    assert tracker.apply(presence(activity="INGAME"), 150) is None
-    tracker.apply(presence(available=False), 151)
-    alert = tracker.apply(presence(), 160)
-    assert alert["name"] == "Test Friend"
-    assert alert["activity"] == "MENUS"
-    LineClient.models(friends.flex.messages([friends.card(alert)]))
+def test_manual_snapshot_includes_already_online_friends_without_notifications():
+    tracker = friends.PresenceTracker(roster())
+    assert tracker.apply(presence()) is None
+    online = tracker.snapshot()[0]
+    assert online["online"] and online["name"] == "Test Friend"
+    LineClient.models(friends.flex.messages([friends.card(online)]))
 
 
 def test_mobile_presence_and_unrelated_users_do_not_trigger_alert():
-    tracker = friends.PresenceTracker(roster(), 100)
-    assert tracker.apply(presence(resource="Mobile", valorant=False), 200) is None
-    assert tracker.online() == []
+    tracker = friends.PresenceTracker(roster())
+    assert tracker.apply(presence(resource="Mobile", valorant=False)) is None
+    assert not tracker.snapshot()[0]["online"]
     stanza = presence()
     stanza.set("from", "unknown@as2.pvp.net/PC")
-    assert tracker.apply(stanza, 201) is None
+    assert tracker.apply(stanza) is None
 
 
 def test_multiple_resources_do_not_create_false_reconnect_notifications():
-    tracker = friends.PresenceTracker(roster(), 100)
-    assert tracker.apply(presence(resource="PC1"), 150)
-    assert tracker.apply(presence(resource="PC2"), 151) is None
-    assert tracker.apply(presence(resource="PC1", available=False), 152) is None
-    assert tracker.apply(presence(resource="PC1"), 153) is None
-    assert len(tracker.online()) == 1
+    tracker = friends.PresenceTracker(roster())
+    tracker.apply(presence(resource="PC1"))
+    tracker.apply(presence(resource="PC2"))
+    tracker.apply(presence(resource="PC1", available=False))
+    assert len(tracker.snapshot()) == 1 and tracker.snapshot()[0]["online"]
+    tracker.apply(presence(resource="PC2", available=False))
+    assert not tracker.snapshot()[0]["online"]
 
 
-def test_alert_retry_key_and_cooldown_and_disabled_setting(tmp_path, monkeypatch):
-    from linebot.v3.messaging.exceptions import ApiException
-    vault = Vault(tmp_path)
-    line = Mock()
-    line.push.side_effect = [ApiException(status=503), None]
-    monkeypatch.setattr(friends, "LineClient", Mock(return_value=line))
-    stop = Mock()
-    stop.is_set.return_value = False
-    alert = {"jid": JID, "name": "Friend", "tag": "AP"}
-    config = {"line_user_id": "owner", "line_access_token": "private"}
-    assert friends.notify(config, vault, alert, 1000, stop)
-    assert line.push.call_count == 2
-    assert line.push.call_args_list[0].args[2] == line.push.call_args_list[1].args[2]
-    assert not friends.notify(config, vault, alert, 1100, stop)
-    vault.write("friend_preferences", {"enabled": False})
-    assert not friends.notify(config, vault, alert, 2000, stop)
-    assert line.push.call_count == 2
-
-
-def test_friend_toggle_is_available_without_riot_auth(tmp_path):
-    vault = Vault(tmp_path)
-    friends.command(vault, "好友提醒關閉")
-    assert not friends.enabled(vault)
-    friends.command(vault, "好友提醒開啟")
-    assert friends.enabled(vault)
-    LineClient.models(friends.command(vault, "好友提醒"))
+def test_auto_alert_commands_and_worker_are_removed():
+    from valbot.app import COMMANDS
+    assert "好友提醒開啟" not in COMMANDS and "好友提醒關閉" not in COMMANDS
+    assert not hasattr(friends, "worker") and not hasattr(friends, "notify")
 
 
 def test_stream_handles_fragmented_and_combined_stanzas():
@@ -132,7 +107,7 @@ def test_tls_handshake_roster_and_unique_resource(monkeypatch):
                     b'<success xmlns="urn:ietf:params:xml:ns:xmpp-sasl"/>',
                     opening + b'<stream:features/>', b'<iq id="valbot-bind" type="result"/>',
                     b'<iq id="valbot-session" type="result"/>',
-                    ET.tostring(roster_result)])
+                    ET.tostring(presence()) + ET.tostring(roster_result)])
     connection = Mock()
     connection.recv.side_effect = lambda size: chunks.popleft() if chunks else b""
     context = Mock()
@@ -142,6 +117,7 @@ def test_tls_handshake_roster_and_unique_resource(monkeypatch):
     chat = xmpp.RiotChat({"host": "as2.chat.si.riotgames.com", "port": 5223, "domain": "as2.pvp.net",
                          "access_token": "private-access", "pas": "private-pas"}, threading.Event())
     assert xmpp.child(chat.connect(), "query") is not None
+    assert xmpp.local_tag(chat.read().tag) == "presence"
     context.wrap_socket.assert_called_once_with(connection, server_hostname="as2.chat.si.riotgames.com")
     sent = [call.args[0] for call in connection.sendall.call_args_list]
     assert any(b"RC-VALBOT-" in data for data in sent)
