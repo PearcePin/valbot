@@ -18,6 +18,7 @@ PARAMS = {"client_id": "play-valorant-web-prod", "redirect_uri": "https://playva
 LOGIN_URL = AUTH + "/authorize?" + urlencode(PARAMS)
 CALLBACK_HOSTS = {"playvalorant.com", "www.playvalorant.com", "auth.riotgames.com",
                   "authenticate.riotgames.com", "account.riotgames.com"}
+PAGE_ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
 
 
 class AuthError(RuntimeError):
@@ -146,8 +147,14 @@ class RiotAuth:
             if parsed.scheme != "https" or parsed.hostname not in {
                 "auth.riotgames.com", "authenticate.riotgames.com"}:
                 break
-            response = client.get(uri)
+            # /authorize is a browser navigation, not a JSON API. Keep the client's
+            # JSON default for userinfo/entitlements and override only page requests.
+            response = client.get(uri, headers={"Accept": PAGE_ACCEPT})
             if response.status_code >= 400:
+                if response.status_code == 406:
+                    raise AuthError("Cookie 自動更新仍收到 HTTP 406（已使用網頁 Accept 標頭）。"
+                                    "這不是 Cookie 欄位格式錯誤，可能還有 Riot 請求或環境限制；"
+                                    "請回報此訊息，不必反覆複製同一份 Cookie。")
                 raise AuthError(f"Cookie 自動更新被 Riot 拒絕（HTTP {response.status_code}）；"
                                 "網址 token 成功不代表 Cookie 可自動更新，請重新登入或改用網址暫時測試。")
             if response.status_code not in {301, 302, 303, 307, 308}:

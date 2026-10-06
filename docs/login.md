@@ -54,6 +54,8 @@ ssid 等同登入憑證，只貼入本機精靈。Bot 會以它測試登入並�
 
 這會保留該 Riot 網域的其他登入 Cookie，一併測試更新；Cookie 只會送至 `auth.riotgames.com`，並加密保存。此方式仍可能因失效、Riot 互動驗證或網路限制失敗，不保證永久登入。不要分享 Cookie 欄位或任何 token。
 
+若回應 HTTP 406，先 `git pull --ff-only` 並重新啟動精靈。新版會讓 `/authorize` 網頁請求接受 HTML，而非只接受 JSON；userinfo／entitlement API 仍使用 JSON。若新版仍回報「HTTP 406（已使用網頁 Accept 標頭）」，表示此修正仍不足以解決當前環境，請只提供錯誤文字，不要持續重貼 Cookie 或分享憑證。
+
 ## 為什麼「正確網址」仍不能用？
 
 一般遊戲首頁、Riot 帳號頁、原本的 authorize 連結，只是網頁位址，沒有 Bot 所需的登入 token。網址模式需要登入跳轉當下含 **`access_token`** 的完整網址，例如：

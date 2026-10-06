@@ -134,6 +134,46 @@ def test_failed_cookie_update_does_not_replace_valid_url_session(tmp_path):
     assert vault.read("session") == original
 
 
+def test_cookie_refresh_negotiates_html_but_token_apis_keep_json(tmp_path):
+    from valbot.auth import PAGE_ACCEPT
+    auth = RiotAuth(Vault(tmp_path))
+    seen = []
+
+    def handler(request):
+        seen.append((request.url.path, request.headers["Accept"]))
+        if request.url.path == "/authorize":
+            if "text/html" not in request.headers["Accept"]:
+                return httpx.Response(406)
+            return httpx.Response(302, headers={"location": "https://auth.riotgames.com/continue"})
+        if request.url.path == "/continue":
+            assert request.headers["Accept"] == PAGE_ACCEPT
+            return httpx.Response(302, headers={"location":
+                "https://playvalorant.com/opt_in#access_token=abc&expires_in=3600"})
+        if request.url.path == "/userinfo":
+            assert request.headers["Accept"] == "application/json"
+            return httpx.Response(200, json={"sub": "owner"})
+        assert request.headers["Accept"] == "application/json"
+        return httpx.Response(200, json={"entitlements_token": "ent"})
+
+    auth.client = lambda cookies=(): httpx.Client(transport=httpx.MockTransport(handler),
+                                                headers={"Accept": "application/json"})
+    assert auth.import_ssid("private-cookie")["puuid"] == "owner"
+    assert [path for path, _ in seen] == ["/authorize", "/continue", "/userinfo", "/api/token/v1"]
+
+
+def test_unresolved_406_is_reported_without_overwriting_session(tmp_path):
+    vault = Vault(tmp_path)
+    original = {"access_token": "known-valid"}
+    vault.write("session", original)
+    auth = RiotAuth(vault)
+    auth.client = lambda cookies=(): httpx.Client(transport=httpx.MockTransport(
+        lambda request: httpx.Response(406, text="private-cookie must not appear in errors")))
+    with pytest.raises(AuthError, match="已使用網頁 Accept") as error:
+        auth.import_ssid("private-cookie")
+    assert "private-cookie" not in str(error.value)
+    assert vault.read("session") == original
+
+
 def test_local_client_refresh_never_changes_account(tmp_path, monkeypatch):
     import valbot.auth as auth_module
     vault = Vault(tmp_path)
