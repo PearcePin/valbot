@@ -13,7 +13,7 @@ import httpx
 from linebot.v3.messaging.exceptions import ApiException
 
 from valbot import flex
-from valbot.auth import RiotAuth, AuthError, LOGIN_URL
+from valbot.auth import RiotAuth, AuthError, LOGIN_URL, token_from_url
 from valbot.line import LineClient
 from valbot.riot import RiotClient, SHARDS
 from valbot.schedule import register_schedule
@@ -35,8 +35,9 @@ def main():
     parser.add_argument("--legacy-auth", action="store_true", help="舊版 Riot 帳密驗證協定（相容用途）")
     parser.add_argument("--login-method", choices=["local", "browser", "password"],
                         help="指定登入方式；Windows 推薦 local，不需 ssid 或貼網址")
+    parser.add_argument("--check-browser-url", action="store_true", help="只診斷瀏覽器網址與 Riot token，不改設定")
     args = parser.parse_args()
-    print("Valorant LINE Bot · 設定精靈（密碼不會保存）")
+    print("Valorant LINE Bot · 設定精靈 v2（支援網址診斷；密碼不會保存）")
     vault = Vault()
     if args.schedule_only:
         if not vault.read("config"):
@@ -45,7 +46,23 @@ def main():
         return
     # A failed reconfiguration must not replace the live account's session.
     with tempfile.TemporaryDirectory(dir=vault.directory, prefix="setup-") as stage:
+        if args.check_browser_url:
+            return check_browser_url(Vault(Path(stage)))
         return configure(vault, Vault(Path(stage)), args)
+
+
+def check_browser_url(staged_vault):
+    print("瀏覽器顯示 404 不影響這個檢查；程式只解析 token，不會開啟貼上的網頁。")
+    uri = required("貼上含 access_token 的完整網址（隱藏輸入）：", secret=True)
+    token_from_url(uri)
+    print("網址解析成功：找到 access_token；接著向 Riot 驗證。")
+    try:
+        RiotAuth(staged_vault).import_browser(uri)
+    except httpx.HTTPError as exc:
+        raise AuthError(f"連線 Riot 驗證介面失敗（{type(exc).__name__}）；請確認網路與主機時間。") from exc
+    print("Riot 帳號驗證與遊戲授權成功。未修改正式設定、未傳送 LINE 訊息。")
+    print("請重新執行 setup.py --login-method browser，選 2 網址模式；長期排程仍需 ssid。")
+    return 0
 
 
 def configure(vault, staged_vault, args):
@@ -113,6 +130,7 @@ def configure(vault, staged_vault, args):
                     print(str(exc) if isinstance(exc, AuthError) else "Riot 連線失敗，請稍後重試。")
                     print("尚未保存設定，可重新複製 ssid 再試，不需要重新輸入其他資料。")
         elif browser_method == "2":
+            print("登入後的網頁顯示 404 沒關係；只要網址含有效的 access_token 就能驗證。")
             print("帳號管理頁／一般首頁不是登入憑證。完整網址需包含 #access_token=...。")
             print("例如：https://playvalorant.com/opt_in#access_token=...&id_token=...&expires_in=3600")
             print("網址會先驗證成功再詢問 ssid；格式有誤可原地重試。")

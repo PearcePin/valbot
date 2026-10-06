@@ -53,3 +53,17 @@ https://playvalorant.com/opt_in#access_token=…&id_token=…&expires_in=3600
 有些網頁會立即移除網址中的 token，因此即使你複製的是登入後的正確頁面，Bot 仍讀不到憑證。新版支援 `www`、語言路徑、結尾斜線及 token query／fragment，不再只接受單一 `/opt_in` 路徑。沒有 token 的網址仍不能用；此時改用 ssid 或 Riot Client 模式，不需要一直重複輸入帳密。
 
 程式不會造訪貼上的任意網址取得憑證；解析出的 token 會交由 Riot 的 userinfo 與 entitlement 介面驗證。Cookie 登入則由 Riot authorize 的實際回應決定是否成功。
+
+## 已跳轉到 404，而且網址包含 token
+
+404 只代表最後那個網頁不存在，不能據此判定登入憑證失效。程式不會下載這個頁面；新版支援 Riot 官方驗證網域的 callback、路由 fragment 與整段 percent-encoded 網址。必須有 `access_token`；只有 `id_token` 或 `token_type` 仍不夠。
+
+先更新並單獨診斷，不需重填 LINE 設定：
+
+```bash
+cd "$HOME/valbot"
+git pull --ff-only
+.venv/bin/python setup.py --check-browser-url
+```
+
+貼上網址時畫面不顯示字元是正常的。結果會指出是「網址解析」、「Riot 帳號驗證（userinfo）」或「Riot 遊戲授權（entitlement）」失敗，並顯示 HTTP 狀態碼；不會顯示 token，也不會改正式設定。若需協助，只分享錯誤訊息，不分享完整網址或 Cookie。

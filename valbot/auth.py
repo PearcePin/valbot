@@ -5,7 +5,7 @@ import base64
 import json
 import os
 from pathlib import Path
-from urllib.parse import parse_qs, urlencode, urlsplit
+from urllib.parse import parse_qs, unquote, urlencode, urlsplit
 
 import httpx
 
@@ -15,28 +15,49 @@ AUTH = "https://auth.riotgames.com"
 PARAMS = {"client_id": "play-valorant-web-prod", "redirect_uri": "https://playvalorant.com/opt_in",
           "response_type": "token id_token", "scope": "account openid", "nonce": "1"}
 LOGIN_URL = AUTH + "/authorize?" + urlencode(PARAMS)
+CALLBACK_HOSTS = {"playvalorant.com", "www.playvalorant.com", "auth.riotgames.com",
+                  "authenticate.riotgames.com", "account.riotgames.com"}
 
 
 class AuthError(RuntimeError):
     pass
 
 
-def json_response(response: httpx.Response) -> dict:
+def json_response(response: httpx.Response, stage="Riot 登入") -> dict:
     if response.status_code >= 400:
-        raise AuthError(f"Riot 登入回應 HTTP {response.status_code}；請使用瀏覽器登入或稍後重試。")
+        if response.status_code == 401:
+            detail = "憑證已過期或不是有效的 access_token，請重新登入並複製最新網址。"
+        elif response.status_code == 403:
+            detail = "Riot 拒絕存取，可能需要額外網頁驗證或存在網路限制。"
+        else:
+            detail = "這是 Riot API 回應，不是瀏覽器最後那個 404 網頁；請回報此階段與狀態碼。"
+        raise AuthError(f"{stage}失敗（HTTP {response.status_code}）。{detail}")
     try:
-        return response.json()
+        result = response.json()
     except ValueError as exc:
-        raise AuthError("Riot 登入需要瀏覽器驗證（可能是 CAPTCHA），請切換瀏覽器模式。") from exc
+        raise AuthError(f"{stage}回傳非 JSON 資料，可能需要網頁驗證；請回報此階段。") from exc
+    if not isinstance(result, dict):
+        raise AuthError(f"{stage}回傳格式不符，請回報此階段。")
+    return result
 
 
 def token_from_url(uri: str) -> dict:
     uri = uri.strip().strip('\"\'')
-    parsed = urlsplit(uri)
-    if parsed.scheme != "https" or parsed.hostname not in {"playvalorant.com", "www.playvalorant.com"}:
-        raise AuthError("這不是 Riot 登入跳轉後的 playvalorant.com 網址。帳號管理頁或原本的登入網址不能當作憑證。")
-    fields = {**parse_qs(parsed.query), **parse_qs(parsed.fragment)}
+    # A browser/copy tool may percent-encode the whole callback URL.
+    for _ in range(2):
+        if uri.lower().startswith("https%"):
+            uri = unquote(uri)
+    try:
+        parsed = urlsplit(uri)
+    except ValueError as exc:
+        raise AuthError("登入網址格式無法解析，請重新複製完整網址。") from exc
+    if parsed.scheme != "https" or parsed.hostname not in CALLBACK_HOSTS:
+        raise AuthError("請貼上 Riot／playvalorant.com 登入跳轉網址，或執行 --check-browser-url 檢查；不接受其他網站。")
+    fragment = parsed.fragment.partition("?")[2] if "?" in parsed.fragment else parsed.fragment.lstrip("/?")
+    fields = {**parse_qs(parsed.query), **parse_qs(fragment)}
     if not fields.get("access_token"):
+        if fields.get("id_token") or fields.get("token_type"):
+            raise AuthError("網址雖然包含 token 字樣，但沒有 access_token；id_token／token_type 不能當作 API 憑證。")
         raise AuthError("這個網址沒有 access_token。請用精靈開啟的連結登入，完成後立刻複製含 #access_token= 的網址；"
                         "若瀏覽器已清除該片段，請改用 ssid 或 Windows Riot Client 登入。")
     try:
@@ -99,9 +120,10 @@ class RiotAuth:
     def finish(self, client: httpx.Client, uri: str) -> dict:
         session = token_from_url(uri)
         bearer = {"Authorization": "Bearer " + session["access_token"]}
+        # The callback web page itself is never requested; even a 404 page may carry a valid token.
+        user = json_response(client.get(AUTH + "/userinfo", headers=bearer), "Riot 帳號驗證（userinfo）")
         entitlement = json_response(client.post("https://entitlements.auth.riotgames.com/api/token/v1",
-                                                headers=bearer, json={}))
-        user = json_response(client.get(AUTH + "/userinfo", headers=bearer))
+                                                headers=bearer, json={}), "Riot 遊戲授權（entitlement）")
         if not entitlement.get("entitlements_token") or not user.get("sub"):
             raise AuthError("Riot 回傳缺少 entitlement 或帳號 ID。")
         session.update(entitlements_token=entitlement["entitlements_token"], puuid=user["sub"],

@@ -22,6 +22,9 @@ def test_token_requires_correct_redirect():
     " https://playvalorant.com/opt_in/#access_token=abc&expires_in=60 ",
     "https://www.playvalorant.com/zh-tw/opt_in#access_token=abc&expires_in=60",
     "https://playvalorant.com/zh-tw/?access_token=abc&expires_in=60",
+    "https://auth.riotgames.com/callback#access_token=abc&expires_in=60",
+    "https://authenticate.riotgames.com/callback#/login?access_token=abc&expires_in=60",
+    "https%3A%2F%2Fplayvalorant.com%2Fopt_in%23access_token%3Dabc%26expires_in%3D60",
 ])
 def test_browser_callback_variants(url):
     assert token_from_url(url)["access_token"] == "abc"
@@ -32,6 +35,46 @@ def test_missing_token_error_explains_alternatives():
         token_from_url("https://playvalorant.com/zh-tw/")
     with pytest.raises(AuthError, match="有效時間"):
         token_from_url("https://playvalorant.com/opt_in#access_token=abc&expires_in=bad")
+    with pytest.raises(AuthError, match="id_token"):
+        token_from_url("https://playvalorant.com/opt_in#id_token=secret&token_type=Bearer")
+
+
+def test_callback_page_is_never_fetched_even_if_it_would_return_404(tmp_path):
+    auth = RiotAuth(Vault(tmp_path))
+    seen = []
+
+    def handler(request):
+        seen.append(str(request.url))
+        if request.url.path == "/userinfo":
+            return httpx.Response(200, json={"sub": "owner"})
+        if request.url.host == "entitlements.auth.riotgames.com":
+            return httpx.Response(200, json={"entitlements_token": "ent"})
+        return httpx.Response(404)
+
+    auth.client = lambda cookies=(): httpx.Client(transport=httpx.MockTransport(handler))
+    result = auth.import_browser("https://auth.riotgames.com/nonexistent#access_token=private-token")
+    assert result["puuid"] == "owner"
+    assert len(seen) == 2
+    assert not any("private-token" in url or "nonexistent" in url for url in seen)
+
+
+@pytest.mark.parametrize("stage", ["userinfo", "entitlement"])
+def test_api_error_identifies_stage_without_leaking_credentials(tmp_path, stage):
+    auth = RiotAuth(Vault(tmp_path))
+
+    def handler(request):
+        if (stage == "userinfo" and request.url.path == "/userinfo") or (
+                stage == "entitlement" and request.url.host == "entitlements.auth.riotgames.com"):
+            return httpx.Response(401, json={"private": "private-token"})
+        return httpx.Response(200, json={"sub": "owner"})
+
+    auth.client = lambda cookies=(): httpx.Client(transport=httpx.MockTransport(handler))
+    with pytest.raises(AuthError) as error:
+        auth.import_browser("https://playvalorant.com/opt_in#access_token=private-token")
+    assert stage in str(error.value)
+    assert "401" in str(error.value)
+    assert "private-token" not in str(error.value)
+    assert auth.vault.read("session") == {}
 
 
 def test_ssid_login_does_not_require_pasted_callback(tmp_path):
