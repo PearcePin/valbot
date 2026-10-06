@@ -10,7 +10,10 @@ if [[ -n "$(git status --porcelain)" ]]; then
     exit 1
 fi
 git pull --ff-only
-sudo systemctl stop valbot.service
+LOAD_STATE="$(systemctl show --property=LoadState --value valbot.service 2>/dev/null || true)"
+if [[ "$LOAD_STATE" == "loaded" ]]; then
+    sudo systemctl stop valbot.service
+fi
 trap 'echo "Update failed; service is stopped. Read the error before restarting." >&2' ERR
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python -m pip check

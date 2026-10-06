@@ -16,8 +16,12 @@ trap 'rm -f -- "$SERVICE_FILE"' EXIT
 .venv/bin/python -m valbot.systemd "$(id -un)" "$SERVICE_FILE"
 sudo install -m 644 "$SERVICE_FILE" /etc/systemd/system/valbot.service
 sudo systemctl daemon-reload
-sudo systemctl reset-failed valbot.service
 sudo systemctl enable valbot.service
+# A newly installed unit may not have a failed state yet. Only clear an
+# actual failure; reset-failed on an unloaded unit aborts first-time setup.
+if systemctl is-failed --quiet valbot.service 2>/dev/null; then
+    sudo systemctl reset-failed valbot.service
+fi
 sudo systemctl restart valbot.service
 echo "Service installed. Follow startup and webhook verification:"
 echo "sudo journalctl -u valbot.service -n 50 -f"
