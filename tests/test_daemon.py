@@ -44,11 +44,28 @@ def test_tunnel_sync_refuses_unrelated_urls(monkeypatch):
 def test_systemd_unit_escapes_paths_and_runs_as_user():
     contents = unit("/home/pearce/my bot%test", "/home/pearce/my bot%test/.venv/bin/python",
                     "/home/pearce/my bot%test/data", "pearce")
-    assert 'WorkingDirectory="/home/pearce/my bot%%test"' in contents
+    assert 'WorkingDirectory=/home/pearce/my bot%%test\n' in contents
     assert 'ExecStart="/home/pearce/my bot%%test/.venv/bin/python" -m valbot.daemon' in contents
     assert "User=pearce" in contents
     assert "KillMode=control-group" in contents
     assert "WantedBy=multi-user.target" in contents
+
+
+def test_unit_passes_native_systemd_parser(tmp_path):
+    import os
+    import shutil
+    import subprocess
+    import sys
+    if os.name != "posix" or not shutil.which("systemd-analyze"):
+        pytest.skip("native systemd validator is only available on Linux")
+    import pwd
+    username = pwd.getpwuid(os.getuid()).pw_name
+    root = tmp_path / "project with space%"
+    root.mkdir()
+    output = tmp_path / "valbot-test.service"
+    output.write_text(unit(root, sys.executable, root / "data", username), encoding="utf-8")
+    result = subprocess.run(["systemd-analyze", "verify", str(output)], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
 
 
 def test_daemon_startup_failure_stops_launched_bot(tmp_path, monkeypatch):

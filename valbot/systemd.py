@@ -11,6 +11,15 @@ def quote(value):
     return '"' + str(value).replace("\\", "\\\\").replace('"', '\\"').replace("%", "%%") + '"'
 
 
+def working_directory(value):
+    # WorkingDirectory is a single path setting, not the quoted word list syntax
+    # used by ExecStart/Environment. Quotes become part of the path on systemd.
+    path = str(value)
+    if not path.startswith("/") or "\n" in path or "\r" in path or "/../" in path:
+        raise ValueError("WorkingDirectory 必須是有效的 Linux 絕對路徑。")
+    return path.replace("%", "%%")
+
+
 def unit(root, python, directory, user):
     if not re.fullmatch(r"[a-z_][a-z0-9_-]*\$?", user):
         raise ValueError("不支援的 Linux 使用者名稱。")
@@ -24,7 +33,7 @@ StartLimitBurst=5
 [Service]
 Type=exec
 User={user}
-WorkingDirectory={quote(root)}
+WorkingDirectory={working_directory(root)}
 Environment={quote('VALBOT_DATA_DIR=' + str(directory))}
 Environment=PYTHONUNBUFFERED=1
 ExecStart={quote(python)} -m valbot.daemon

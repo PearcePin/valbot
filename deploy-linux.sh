@@ -11,9 +11,11 @@ if ! systemctl is-active --quiet valbot.service && curl -fsS --max-time 3 http:/
     echo "First press Ctrl+C in your manually started Bot and Tunnel terminals, then rerun this script." >&2
     exit 1
 fi
-SERVICE_FILE="$(mktemp)"
+SERVICE_FILE="$(mktemp --suffix=.service)"
 trap 'rm -f -- "$SERVICE_FILE"' EXIT
 .venv/bin/python -m valbot.systemd "$(id -un)" "$SERVICE_FILE"
+# Validate with the actual systemd parser before changing the installed unit.
+systemd-analyze verify "$SERVICE_FILE"
 sudo install -m 644 "$SERVICE_FILE" /etc/systemd/system/valbot.service
 sudo systemctl daemon-reload
 sudo systemctl enable valbot.service

@@ -20,7 +20,7 @@ def bash_path():
     return shutil.which("bash")
 
 
-def run_script(tmp_path, filename, state):
+def run_script(tmp_path, filename, state, verify_fail=False):
     bash = bash_path()
     if not bash:
         pytest.skip("bash is not available")
@@ -46,6 +46,10 @@ def run_script(tmp_path, filename, state):
     executable(fake_bin / "id", "echo pearce\n")
     executable(fake_bin / "curl", "exit 22\n")
     executable(fake_bin / "git", "exit 0\n")
+    executable(fake_bin / "systemd-analyze", '''
+echo "systemd-analyze $*" >> "$LOG_FILE"
+[[ "${VERIFY_FAIL:-0}" == 0 ]]
+''')
     executable(fake_bin / "systemctl", '''
 echo "systemctl $*" >> "$LOG_FILE"
 case "$1" in
@@ -64,7 +68,8 @@ fi
 exit 0
 ''')
     environment = {**os.environ, "FAKE_BIN": fake_bin.as_posix(), "LOG_FILE": log.as_posix(),
-                   "UNIT_STATE": state, "TEST_SCRIPT": (project / filename).as_posix()}
+                   "UNIT_STATE": state, "TEST_SCRIPT": (project / filename).as_posix(),
+                   "VERIFY_FAIL": "1" if verify_fail else "0"}
     command = 'export PATH="$(cd "$FAKE_BIN" && pwd):$PATH"; bash "$TEST_SCRIPT"'
     result = subprocess.run([bash, "-c", command], env=environment, capture_output=True, text=True, timeout=20)
     return result, log.read_text(encoding="utf-8").splitlines() if log.exists() else []
@@ -74,6 +79,9 @@ def test_initial_deployment_does_not_reset_unloaded_service(tmp_path):
     result, calls = run_script(tmp_path, "deploy-linux.sh", "absent")
     assert result.returncode == 0, result.stderr
     assert "sudo systemctl reset-failed valbot.service" not in calls
+    verification = next(i for i, call in enumerate(calls) if call.startswith("systemd-analyze verify "))
+    installation = next(i for i, call in enumerate(calls) if call.startswith("sudo install "))
+    assert verification < installation
     assert calls.index("sudo systemctl enable valbot.service") < calls.index("sudo systemctl restart valbot.service")
 
 
@@ -88,3 +96,10 @@ def test_update_recovers_an_installation_with_no_loaded_service(tmp_path):
     assert result.returncode == 0, result.stderr
     assert "sudo systemctl stop valbot.service" not in calls
     assert "sudo systemctl restart valbot.service" in calls
+
+
+def test_bad_unit_validation_does_not_replace_installed_service(tmp_path):
+    result, calls = run_script(tmp_path, "deploy-linux.sh", "absent", verify_fail=True)
+    assert result.returncode != 0
+    assert not any(call.startswith("sudo install ") for call in calls)
+    assert "sudo systemctl restart valbot.service" not in calls
