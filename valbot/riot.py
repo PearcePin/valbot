@@ -75,11 +75,12 @@ class RiotClient:
     def content(self):
         return self.request("/content-service/v3/content", shared=True)
 
-    def latest_match(self):
-        history = self.request(f"/match-history/v1/history/{self.puuid}?startIndex=0&endIndex=1")
-        if not history.get("History"):
-            return None
-        return self.request("/match-details/v1/matches/" + history["History"][0]["MatchID"])
+    def recent_matches(self, limit=5):
+        if not 1 <= limit <= 5:
+            raise ValueError("戰績查詢數量須為 1 至 5 場。")
+        history = self.request(f"/match-history/v1/history/{self.puuid}?startIndex=0&endIndex={limit}")
+        return [self.request("/match-details/v1/matches/" + entry["MatchID"])
+                for entry in (history.get("History") or [])[:limit]]
 
     def mmr(self):
         return self.request(f"/mmr/v1/players/{self.puuid}")

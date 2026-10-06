@@ -44,6 +44,8 @@ def process_event(event, config, vault, line):
                 detail = "登入已失效，請在主機重新執行 setup.py。" if isinstance(exc, AuthError) \
                     else "資料服務暫時無法使用，請稍後再試。"
                 messages = flex.messages([flex.notice("查詢暫時無法完成", detail)])
+            # Send the result and menu in one reply request: reply tokens are single-use.
+            messages.extend(flex.messages([flex.menu()], "Valorant · 指令中心"))
     else:
         return
     line.reply(event["replyToken"], messages)

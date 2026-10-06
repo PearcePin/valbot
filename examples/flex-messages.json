@@ -199,7 +199,7 @@
                   },
                   {
                     "type": "text",
-                    "text": "最近一場",
+                    "text": "最近五場",
                     "size": "xs",
                     "color": "#A5B4C3",
                     "wrap": true
@@ -1387,7 +1387,7 @@
           },
           {
             "type": "text",
-            "text": "最近一場 · 示範 competitive",
+            "text": "對戰結算 · 示範 competitive",
             "size": "xl",
             "color": "#F1F5F9",
             "wrap": true,

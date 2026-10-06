@@ -1,4 +1,5 @@
 from unittest.mock import Mock
+import pytest
 
 from linebot.v3.messaging import FlexMessage
 
@@ -89,3 +90,22 @@ def test_current_rank_does_not_use_last_seasons_rank():
     riot.assets.rank.return_value = {"tierName": "未定級"}
     BotService(riot).rank()
     riot.assets.rank.assert_called_once_with(0)
+
+
+@pytest.mark.parametrize("count", [0, 2, 5])
+def test_recent_match_carousel_handles_available_history(count):
+    riot = fake_riot()
+    riot.assets.map.return_value = {}
+    riot.assets.lookup.return_value = {}
+    match = {"matchInfo": {"queueID": "competitive"}, "players": [
+        {"subject": "owner", "teamId": "Red", "stats": {"score": 2000, "roundsPlayed": 10}}]}
+    riot.recent_matches.return_value = [match] * count
+    messages = BotService(riot).command("戰績")
+    contents = messages[0]["contents"]
+    if count:
+        assert contents["type"] == "carousel"
+        assert len(contents["contents"]) == count
+        assert contents["contents"][0]["header"]["contents"][1]["text"] == "最近第 1 場 · competitive"
+    else:
+        assert contents["type"] == "bubble"
+    LineClient.models(messages)

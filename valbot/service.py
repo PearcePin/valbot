@@ -157,8 +157,11 @@ class BotService:
         elif command == "牌位":
             card = self.rank()
         elif command == "戰績":
-            match = self.riot.latest_match()
-            card = flex.match_card(match, self.riot.puuid, self.assets) if match else flex.notice("戰績", "沒有近期對戰。")
+            matches = self.riot.recent_matches()
+            card = flex.carousel([flex.match_card(match, self.riot.puuid, self.assets,
+                                                  title=f"最近第 {i} 場")
+                                  for i, match in enumerate(matches, start=1)]) \
+                if matches else flex.notice("戰績", "沒有近期對戰。")
         elif command == "任務":
             card = self.missions()
         elif command == "通行證":

@@ -4,10 +4,12 @@ import hmac
 import json
 import time
 from unittest.mock import Mock
+import pytest
 
 from fastapi.testclient import TestClient
 
-from valbot.app import create_app
+from valbot.app import create_app, process_event
+from valbot import flex
 from valbot.queue import Inbox
 from valbot.storage import Vault
 
@@ -56,3 +58,23 @@ def test_inbox_survives_restart_and_hides_reply_token(tmp_path):
     assert b"private-reply-token" not in (tmp_path / "inbox.sqlite3").read_bytes()
     restarted.finish("id")
     assert inbox.claim() is None
+
+
+@pytest.mark.parametrize("failure", [False, True])
+def test_query_reply_ends_with_one_menu_even_on_failure(tmp_path, monkeypatch, failure):
+    import valbot.app as app_module
+    result = flex.messages([flex.notice("戰績", "測試結果")])
+    service = Mock()
+    service.command.return_value = result
+    if failure:
+        service.command.side_effect = RuntimeError("upstream unavailable")
+    monkeypatch.setattr(app_module, "RiotClient", Mock())
+    monkeypatch.setattr(app_module, "BotService", Mock(return_value=service))
+    line = Mock()
+    event = {"type": "message", "replyToken": "reply", "source": {"type": "user", "userId": OWNER},
+             "message": {"text": "戰績"}}
+    process_event(event, {"line_user_id": OWNER}, Vault(tmp_path), line)
+    line.reply.assert_called_once()
+    messages = line.reply.call_args.args[1]
+    assert len(messages) == 2
+    assert messages[-1]["contents"] == flex.menu()

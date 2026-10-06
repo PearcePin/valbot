@@ -40,7 +40,7 @@ def notice(title, detail):
 
 def menu():
     commands = [("商店", "今日造型"), ("夜市", "限定折扣"), ("配件", "每週精選"),
-                ("錢包", "VP / RP / KC"), ("戰績", "最近一場"), ("牌位", "段位與 RR"),
+                ("錢包", "VP / RP / KC"), ("戰績", "最近五場"), ("牌位", "段位與 RR"),
                 ("任務", "本期目標"), ("通行證", "等級與獎勵")]
     rows = []
     for i in range(0, len(commands), 2):
@@ -103,7 +103,7 @@ def progress(label, current, target=None, subtitle=None):
     return box(contents, spacing="sm", paddingAll="12px", backgroundColor=PANEL, cornerRadius="10px")
 
 
-def match_card(match: dict, puuid: str, assets):
+def match_card(match: dict, puuid: str, assets, title="對戰結算"):
     player = next((x for x in match.get("players", []) if x["subject"] == puuid), None)
     if not player:
         return notice("戰績", "這場對戰沒有此帳號的玩家資料。")
@@ -136,7 +136,7 @@ def match_card(match: dict, puuid: str, assets):
     rounds = stats.get("roundsPlayed", 0)
     acs = round(stats.get("score", 0) / rounds) if rounds else None
     kda = f"{stats.get('kills', 0)} / {stats.get('deaths', 0)} / {stats.get('assists', 0)}"
-    return bubble("最近一場 · " + (info.get("queueID") or "custom"), [
+    return bubble(title + " · " + (info.get("queueID") or "custom"), [
         text(agent.get("displayName", "特務"), "lg", weight="bold"),
         box([box([text("K / D / A", "xs", MUTED), text(kda, "xl", weight="bold")], flex=2),
              box([text("ACS", "xs", MUTED), text(acs if acs is not None else "—", "xl", RED,
