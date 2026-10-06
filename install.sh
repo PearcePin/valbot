@@ -2,10 +2,11 @@
 set -euo pipefail
 REPO_URL="${VALBOT_REPO_URL:-https://github.com/PearcePin/valbot.git}"
 TARGET="${VALBOT_INSTALL_DIR:-$HOME/valbot}"
-for tool in git python3; do
+PYTHON="${VALBOT_PYTHON:-python3}"
+for tool in git "$PYTHON"; do
     command -v "$tool" >/dev/null || { echo "Missing $tool. Ubuntu: sudo apt install git python3 python3-venv cron" >&2; exit 1; }
 done
-python3 -c 'import sys; assert sys.version_info >= (3, 11), "Python 3.11+ required"'
+"$PYTHON" -c 'import sys; assert (3, 11) <= sys.version_info < (3, 14), "Use Python 3.11-3.13 (recommended: 3.12). LINE SDK uses Pydantic V1, incompatible with Python 3.14. Set VALBOT_PYTHON to a compatible Python executable."'
 if [[ "${1:-}" == "--local" ]]; then
     TARGET="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
     [[ -f "$TARGET/setup.py" && -f "$TARGET/requirements.txt" ]] || { echo "Invalid local project" >&2; exit 1; }
@@ -16,7 +17,11 @@ else
     git clone -- "$REPO_URL" "$TARGET"
 fi
 cd "$TARGET"
-python3 -m venv .venv
+if [[ -x .venv/bin/python ]] && ! .venv/bin/python -c 'import sys; assert (3, 11) <= sys.version_info < (3, 14)' 2>/dev/null; then
+    echo "Existing .venv uses an incompatible Python. Rename .venv to a backup, then rerun. Keep data/ intact." >&2
+    exit 1
+fi
+"$PYTHON" -m venv .venv
 .venv/bin/python -m pip install --upgrade pip
 .venv/bin/python -m pip install -r requirements.txt
 # Reading /dev/tty keeps prompts usable even when this script is piped into bash.

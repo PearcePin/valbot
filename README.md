@@ -1,6 +1,6 @@
 # Valorant LINE Bot
 
-特戰英豪個人 LINE 助手，支援 Ubuntu Linux 與 Windows 10/11。採用 **FastAPI + LINE 官方 SDK v3 + httpx**，以 Flex Message 顯示遊戲資訊。原生 cron／工作排程器執行每日推播，不必讓 Webhook 常駐才可推播。Python 3.11 以上。
+特戰英豪個人 LINE 助手，支援 Ubuntu Linux 與 Windows 10/11。採用 **FastAPI + LINE 官方 SDK v3 + httpx**，以 Flex Message 顯示遊戲資訊。原生 cron／工作排程器執行每日推播，不必讓 Webhook 常駐才可推播。Python **3.11–3.13，推薦 3.12**；目前 LINE SDK 使用 Pydantic V1，不支援 Python 3.14。
 
 ## 功能
 
@@ -64,6 +64,16 @@ py -3 -m venv .venv
 ```
 
 ## 取得 LINE 憑證
+
+Ubuntu 系統 Python 若為 3.14，可用 [uv](https://docs.astral.sh/uv/guides/install-python/) 為 Bot 另裝 Python 3.12：
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+"$HOME/.local/bin/uv" python install 3.12
+VALBOT_PYTHON="$("$HOME/.local/bin/uv" python find 3.12)" bash "$HOME/valbot/install.sh" --local
+```
+
+先 clone 專案再執行上述步驟。系統原本的 Python 可保留；`VALBOT_PYTHON` 僅指定此專案建立 venv 所用的 Python。若之前已有不相容的 `.venv`，先將它重新命名備份，保留 `data/` 設定。
 
 1. 建立 [LINE 官方帳號](https://manager.line.biz/)，在設定中啟用 Messaging API。
 2. 至 [LINE Developers Console](https://developers.line.biz/console/) 的 Messaging API Channel，發行 **Channel access token（long-lived）**。
