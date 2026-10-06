@@ -5,6 +5,7 @@ import base64
 import json
 import os
 from pathlib import Path
+from http.cookies import SimpleCookie, CookieError
 from urllib.parse import parse_qs, unquote, urlencode, urlsplit
 
 import httpx
@@ -135,18 +136,26 @@ class RiotAuth:
     def redirect_uri(self, client: httpx.Client, uri: str) -> str:
         for _ in range(8):
             parsed = urlsplit(uri)
-            fields = {**parse_qs(parsed.query), **parse_qs(parsed.fragment)}
-            if parsed.hostname in {"playvalorant.com", "www.playvalorant.com"} and fields.get("access_token"):
+            # Use the same parser as pasted URLs, including Riot-host callbacks and fragment routes.
+            try:
+                token_from_url(uri)
+            except AuthError:
+                pass
+            else:
                 return uri
             if parsed.scheme != "https" or parsed.hostname not in {
                 "auth.riotgames.com", "authenticate.riotgames.com"}:
                 break
             response = client.get(uri)
+            if response.status_code >= 400:
+                raise AuthError(f"Cookie 自動更新被 Riot 拒絕（HTTP {response.status_code}）；"
+                                "網址 token 成功不代表 Cookie 可自動更新，請重新登入或改用網址暫時測試。")
             if response.status_code not in {301, 302, 303, 307, 308}:
                 break
             from urllib.parse import urljoin
             uri = urljoin(uri, response.headers.get("location", ""))
-        raise AuthError("工作階段失效或需要互動驗證，請重新執行 setup.py 登入。")
+        raise AuthError("Cookie 自動更新未完成：Riot 沒有回傳 access_token，可能是 ssid 已失效、"
+                        "只複製 ssid 不足以恢復工作階段，或需要瀏覽器互動驗證。可改用已驗證的網址暫時測試。")
 
     def login(self, username: str, password: str, get_code, *, legacy=False) -> dict:
         with self.client() as client:
@@ -188,6 +197,25 @@ class RiotAuth:
             raise AuthError("請只複製 ssid 那一列的 Value，不是整列或整段 Cookie。")
         with self.client() as client:
             client.cookies.set("ssid", ssid, domain="auth.riotgames.com", path="/")
+            return self.finish(client, self.redirect_uri(client, LOGIN_URL))
+
+    def import_cookie_header(self, header: str) -> dict:
+        """Import only the Cookie header of a request to auth.riotgames.com."""
+        header = header.strip()
+        if header.lower().startswith("cookie:"):
+            header = header.partition(":")[2].strip()
+        if not header or "\n" in header or "\r" in header:
+            raise AuthError("請只貼 Riot auth.riotgames.com 請求的 Cookie 欄位值，不是整段請求標頭。")
+        cookies = SimpleCookie()
+        try:
+            cookies.load(header)
+        except CookieError as exc:
+            raise AuthError("Cookie 欄位格式無法解析，請重新複製完整 Cookie 欄位值。") from exc
+        if not cookies.get("ssid"):
+            raise AuthError("Cookie 欄位未含 ssid；請確認複製的是 auth.riotgames.com 的登入請求。")
+        with self.client() as client:
+            for name, value in cookies.items():
+                client.cookies.set(name, value.value, domain="auth.riotgames.com", path="/")
             return self.finish(client, self.redirect_uri(client, LOGIN_URL))
 
     def import_local(self) -> dict:

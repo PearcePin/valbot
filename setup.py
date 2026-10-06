@@ -103,10 +103,10 @@ def configure(vault, staged_vault, args):
         finally:
             del password
     if mode == "2":
-        print("瀏覽器登入：完成 Riot 登入與 2FA 後，推薦只複製 ssid，不必搶著複製跳轉網址。")
+        print("瀏覽器登入：完成 Riot 登入與 2FA。ssid 能否自動更新，須以 Riot 實際驗證結果為準。")
         print(LOGIN_URL)
         webbrowser.open(LOGIN_URL)
-        browser_method = input("[1 ssid 登入（推薦，可自動更新） / 2 貼上含 access_token 的網址]（預設 1）：").strip() or "1"
+        browser_method = input("[1 ssid / 2 access_token 網址 / 3 Riot 完整 Cookie（ssid 失敗時）]（預設 1）：").strip() or "1"
         if browser_method == "1":
             print("1. 在剛開啟的瀏覽器完成 Riot 登入與 2FA。")
             input("完成登入後按 Enter，我會開啟 Cookie 檢視用的網頁：")
@@ -128,8 +128,35 @@ def configure(vault, staged_vault, args):
                     break
                 except (AuthError, httpx.HTTPError) as exc:
                     print(str(exc) if isinstance(exc, AuthError) else "Riot 連線失敗，請稍後重試。")
-                    print("尚未保存設定，可重新複製 ssid 再試，不需要重新輸入其他資料。")
-        elif browser_method == "2":
+                    choice = input("Enter 重貼 ssid；2 改貼登入網址；3 改用完整 Cookie；q 離開：").strip().lower()
+                    if choice == "q":
+                        return 1
+                    if choice in {"2", "3"}:
+                        browser_method = choice
+                        break
+        if browser_method == "3":
+            print("在已登入的瀏覽器按 F12 → Network（網路）→ 勾 Preserve log（保留紀錄）。")
+            print("重新開啟上方登入連結，找到 Request URL 為 https://auth.riotgames.com/authorize 的請求。")
+            print("在 Headers → Request Headers 中，複製 Cookie 欄位的整個值（應含 ssid=...）。")
+            print("只複製這個 Riot 網域的 Cookie 欄位，不要複製所有標頭或其他網站的 Cookie。")
+            print("詳見 docs/login.md；內容是登入憑證，只貼入本機精靈。")
+            while True:
+                cookie_header = required("Riot Cookie 欄位值（隱藏輸入；q 離開）：", secret=True)
+                if cookie_header.strip().lower() == "q":
+                    return 1
+                try:
+                    auth.import_cookie_header(cookie_header)
+                    print("完整 Cookie 自動更新測試成功。")
+                    break
+                except (AuthError, httpx.HTTPError) as exc:
+                    print(str(exc) if isinstance(exc, AuthError) else "Cookie 更新測試連線失敗。")
+                    choice = input("Enter 重新貼完整 Cookie；2 改用網址暫時測試；q 離開：").strip().lower()
+                    if choice == "q":
+                        return 1
+                    if choice == "2":
+                        browser_method = "2"
+                        break
+        if browser_method == "2":
             print("登入後的網頁顯示 404 沒關係；只要網址含有效的 access_token 就能驗證。")
             print("帳號管理頁／一般首頁不是登入憑證。完整網址需包含 #access_token=...。")
             print("例如：https://playvalorant.com/opt_in#access_token=...&id_token=...&expires_in=3600")
@@ -145,13 +172,23 @@ def configure(vault, staged_vault, args):
                     print(str(exc) if isinstance(exc, AuthError) else "Riot 連線失敗，請稍後重試。")
             print("網址模式憑證通常僅約一小時有效；每日排程需 ssid 或 Windows Riot Client 模式。")
             ssid = getpass("ssid 的 Value（可空白；取得步驟見 docs/login.md）：").strip()
-            if ssid:
-                before = staged_vault.read("session")["puuid"]
-                updated = auth.import_ssid(ssid)
-                if before != updated["puuid"]:
-                    raise AuthError("網址與 ssid 屬於不同 Riot 帳號，請重新設定並使用同一個帳號。")
-        else:
-            raise AuthError("請選擇 1（ssid）或 2（網址）。")
+            while ssid:
+                original = staged_vault.read("session")
+                try:
+                    updated = auth.import_ssid(ssid)
+                    if original["puuid"] != updated["puuid"]:
+                        staged_vault.write("session", original)
+                        raise AuthError("網址與 ssid 屬於不同 Riot 帳號；已保留網址登入，請使用同一個帳號的 ssid。")
+                    print("Cookie 自動更新測試成功。")
+                    break
+                except (AuthError, httpx.HTTPError) as exc:
+                    print(str(exc) if isinstance(exc, AuthError) else "Cookie 更新測試連線失敗。")
+                    print("已保留成功的網址登入。可重新貼 ssid，或按 Enter 留空以暫時測試。")
+                    ssid = getpass("重新貼 ssid（Enter 略過）：").strip()
+            if not ssid:
+                print("目前只有短效網址 token，沒有驗證成功的 Cookie；過期後須手動登入，不能保證每日排程。")
+        elif browser_method not in {"1", "3"}:
+            raise AuthError("請選擇 1（ssid）、2（網址）或 3（完整 Cookie）。")
     config = {"region": region, "line_access_token": required("LINE Channel Access Token：", secret=True),
               "line_channel_secret": required("LINE Channel Secret（Webhook 簽章驗證必要）：", secret=True),
               "line_user_id": required("LINE User ID（U 開頭）：")}

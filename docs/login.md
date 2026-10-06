@@ -42,6 +42,18 @@ Firefox 使用 **F12 → Storage（儲存空間）→ Cookies → https://auth.r
 
 ssid 等同登入憑證，只貼入本機精靈。Bot 會以它測試登入並加密保存；失效時需要重新登入。
 
+若網址 token 驗證成功，但 ssid 顯示「工作階段失效／需要互動驗證」，代表兩種登入方式結果不同，不能保證只靠 ssid 就能自動更新。新版會在 ssid 失敗時提供切換到網址模式的選項；網址登入後，補填 ssid 失敗也會保留已成功的網址登入，讓你重試或留空暫時測試。只有 Cookie 更新實際成功後，才可用於無人值守排程；留空時 token 過期仍需手動登入。
+
+## ssid 不足時：選 3，匯入 Riot 完整 Cookie
+
+1. 在已登入的瀏覽器按 F12，選 **Network（網路）**，勾 **Preserve log（保留紀錄）**。
+2. 重新開啟精靈顯示的 Riot 登入連結並完成所需驗證。
+3. 在 Network 找到 **Request URL 是 `https://auth.riotgames.com/authorize?...`** 的請求；請求名稱通常是 `authorize`。
+4. 點該請求 → **Headers → Request Headers**，複製 **Cookie** 欄位完整值，應包含 `ssid=...; ...`。
+5. 精靈選 **3 Riot 完整 Cookie**，將值貼入隱藏輸入處。不是 Response Headers 的 Set-Cookie，也不是所有標頭。
+
+這會保留該 Riot 網域的其他登入 Cookie，一併測試更新；Cookie 只會送至 `auth.riotgames.com`，並加密保存。此方式仍可能因失效、Riot 互動驗證或網路限制失敗，不保證永久登入。不要分享 Cookie 欄位或任何 token。
+
 ## 為什麼「正確網址」仍不能用？
 
 一般遊戲首頁、Riot 帳號頁、原本的 authorize 連結，只是網頁位址，沒有 Bot 所需的登入 token。網址模式需要登入跳轉當下含 **`access_token`** 的完整網址，例如：

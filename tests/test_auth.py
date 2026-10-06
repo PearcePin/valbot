@@ -77,15 +77,19 @@ def test_api_error_identifies_stage_without_leaking_credentials(tmp_path, stage)
     assert auth.vault.read("session") == {}
 
 
-def test_ssid_login_does_not_require_pasted_callback(tmp_path):
+@pytest.mark.parametrize("callback", [
+    "https://playvalorant.com/opt_in#access_token=abc&expires_in=3600",
+    "https://auth.riotgames.com/callback#access_token=abc&expires_in=3600",
+    "https://authenticate.riotgames.com/callback#/login?access_token=abc&expires_in=3600",
+])
+def test_ssid_login_does_not_require_pasted_callback(tmp_path, callback):
     auth = RiotAuth(Vault(tmp_path))
     cookies_seen = []
 
     def handler(request):
         if request.url.path == "/authorize":
             cookies_seen.append(request.headers.get("cookie", ""))
-            return httpx.Response(302, headers={"location":
-                "https://playvalorant.com/opt_in#access_token=abc&expires_in=3600"})
+            return httpx.Response(302, headers={"location": callback})
         if request.url.path == "/userinfo":
             return httpx.Response(200, json={"sub": "owner"})
         return httpx.Response(200, json={"entitlements_token": "ent"})
@@ -94,6 +98,40 @@ def test_ssid_login_does_not_require_pasted_callback(tmp_path):
     assert auth.import_ssid("private-cookie")["puuid"] == "owner"
     assert cookies_seen == ["ssid=private-cookie"]
     assert auth.vault.read("session")["cookies"][0]["value"] == "private-cookie"
+
+
+def test_full_cookie_import_keeps_other_auth_cookies_for_refresh(tmp_path):
+    auth = RiotAuth(Vault(tmp_path))
+    seen = []
+
+    def handler(request):
+        if request.url.path == "/authorize":
+            seen.append(request.headers.get("cookie", ""))
+            return httpx.Response(302, headers={"location":
+                "https://playvalorant.com/opt_in#access_token=abc&expires_in=3600"})
+        if request.url.path == "/userinfo":
+            return httpx.Response(200, json={"sub": "owner"})
+        return httpx.Response(200, json={"entitlements_token": "ent"})
+
+    auth.client = lambda cookies=(): httpx.Client(transport=httpx.MockTransport(handler))
+    auth.import_cookie_header("Cookie: ssid=private; asid=another-cookie")
+    assert "ssid=private" in seen[0]
+    assert "asid=another-cookie" in seen[0]
+    assert {x["name"] for x in auth.vault.read("session")["cookies"]} == {"ssid", "asid"}
+    with pytest.raises(AuthError):
+        auth.import_cookie_header("Cookie: ssid=private\nAuthorization: Bearer secret")
+
+
+def test_failed_cookie_update_does_not_replace_valid_url_session(tmp_path):
+    vault = Vault(tmp_path)
+    original = {"access_token": "known-valid", "puuid": "owner", "expires_at": time.time() + 3600}
+    vault.write("session", original)
+    auth = RiotAuth(vault)
+    auth.client = lambda cookies=(): httpx.Client(transport=httpx.MockTransport(
+        lambda request: httpx.Response(200, text="interactive login required")))
+    with pytest.raises(AuthError, match="Cookie 自動更新未完成"):
+        auth.import_ssid("rejected-cookie")
+    assert vault.read("session") == original
 
 
 def test_local_client_refresh_never_changes_account(tmp_path, monkeypatch):
