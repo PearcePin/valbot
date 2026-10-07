@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from .analysis import match_stats, match_time, recent_summary
 
 BG = "#101923"
@@ -53,10 +54,17 @@ def menu():
 
 
 def item_card(item: dict, section: str, remaining: int | None = None):
-    hero = box([image(item["image"], aspectRatio="16:9")], paddingAll="16px", backgroundColor=PANEL) \
+    tier_color = item.get("tier_color")
+    background = tier_color if isinstance(tier_color, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", tier_color) else PANEL
+    hero = box([image(item["image"], aspectRatio="16:9")], paddingAll="16px", backgroundColor=background) \
         if item.get("image") else box([text("預覽尚未收錄", "md", MUTED, align="center")],
-                                      height="170px", justifyContent="center", backgroundColor=PANEL)
+                                      height="170px", justifyContent="center", backgroundColor=background)
     contents = [text(item["name"], "lg", weight="bold")]
+    if item.get("tier_name") and background != PANEL:
+        label = [text(item["tier_name"], "xs", background, weight="bold")]
+        if item.get("tier_icon"):
+            label.insert(0, image(item["tier_icon"], size="xxs", flex=0))
+        contents.append(box(label, "horizontal", spacing="sm", alignItems="center"))
     if item.get("discount"):
         contents.append(box([text(f"−{item['discount']}%", "sm", GREEN, weight="bold"),
                              text(f"原價 {item['original']:,} {item['currency']}" if item.get("original") is not None

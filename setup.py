@@ -209,6 +209,10 @@ def configure(vault, staged_vault, args):
         for endpoint in ("weapons/skins", "buddies", "playercards", "sprays", "playertitles", "currencies",
                          "bundles", "maps", "agents", "competitivetiers"):
             riot.assets.get(endpoint)
+        try:
+            riot.assets.get("contenttiers")
+        except (httpx.HTTPError, ValueError, KeyError):
+            print("稀有度資料暫時無法取得；卡片會先使用預設背景。")
     line = LineClient(config["line_access_token"])
     line.validate_token()
     line.validate_user(config["line_user_id"])

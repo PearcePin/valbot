@@ -374,6 +374,29 @@
                 "weight": "bold"
               },
               {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "image",
+                    "url": "https://media.valorant-api.com/contenttiers/0cebb8be-46d7-c12a-d306-e9907bfc5a25/displayicon.png",
+                    "size": "xxs",
+                    "aspectMode": "fit",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "奢華",
+                    "size": "xs",
+                    "color": "#009587",
+                    "wrap": true,
+                    "weight": "bold"
+                  }
+                ],
+                "spacing": "sm",
+                "alignItems": "center"
+              },
+              {
                 "type": "text",
                 "text": "1,775 VP",
                 "size": "xxl",
@@ -405,7 +428,7 @@
               }
             ],
             "paddingAll": "16px",
-            "backgroundColor": "#1B2935"
+            "backgroundColor": "#009587"
           }
         },
         {
@@ -455,6 +478,29 @@
                 "weight": "bold"
               },
               {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "image",
+                    "url": "https://media.valorant-api.com/contenttiers/60bca009-4182-7998-dee7-b8a2558dc369/displayicon.png",
+                    "size": "xxs",
+                    "aspectMode": "fit",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "尊爵",
+                    "size": "xs",
+                    "color": "#D1548D",
+                    "wrap": true,
+                    "weight": "bold"
+                  }
+                ],
+                "spacing": "sm",
+                "alignItems": "center"
+              },
+              {
                 "type": "text",
                 "text": "1,775 VP",
                 "size": "xxl",
@@ -486,7 +532,7 @@
               }
             ],
             "paddingAll": "16px",
-            "backgroundColor": "#1B2935"
+            "backgroundColor": "#D1548D"
           }
         },
         {
@@ -536,6 +582,29 @@
                 "weight": "bold"
               },
               {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "image",
+                    "url": "https://media.valorant-api.com/contenttiers/60bca009-4182-7998-dee7-b8a2558dc369/displayicon.png",
+                    "size": "xxs",
+                    "aspectMode": "fit",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "尊爵",
+                    "size": "xs",
+                    "color": "#D1548D",
+                    "wrap": true,
+                    "weight": "bold"
+                  }
+                ],
+                "spacing": "sm",
+                "alignItems": "center"
+              },
+              {
                 "type": "text",
                 "text": "1,775 VP",
                 "size": "xxl",
@@ -567,7 +636,7 @@
               }
             ],
             "paddingAll": "16px",
-            "backgroundColor": "#1B2935"
+            "backgroundColor": "#D1548D"
           }
         },
         {
@@ -617,6 +686,29 @@
                 "weight": "bold"
               },
               {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "image",
+                    "url": "https://media.valorant-api.com/contenttiers/12683d76-48d7-84a3-4e09-6985794f0445/displayicon.png",
+                    "size": "xxs",
+                    "aspectMode": "fit",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "精選",
+                    "size": "xs",
+                    "color": "#5A9FE2",
+                    "wrap": true,
+                    "weight": "bold"
+                  }
+                ],
+                "spacing": "sm",
+                "alignItems": "center"
+              },
+              {
                 "type": "text",
                 "text": "1,775 VP",
                 "size": "xxl",
@@ -648,7 +740,7 @@
               }
             ],
             "paddingAll": "16px",
-            "backgroundColor": "#1B2935"
+            "backgroundColor": "#5A9FE2"
           }
         }
       ]
@@ -711,6 +803,29 @@
                 "layout": "horizontal",
                 "contents": [
                   {
+                    "type": "image",
+                    "url": "https://media.valorant-api.com/contenttiers/0cebb8be-46d7-c12a-d306-e9907bfc5a25/displayicon.png",
+                    "size": "xxs",
+                    "aspectMode": "fit",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "奢華",
+                    "size": "xs",
+                    "color": "#009587",
+                    "wrap": true,
+                    "weight": "bold"
+                  }
+                ],
+                "spacing": "sm",
+                "alignItems": "center"
+              },
+              {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
                     "type": "text",
                     "text": "−30%",
                     "size": "sm",
@@ -760,7 +875,7 @@
               }
             ],
             "paddingAll": "16px",
-            "backgroundColor": "#1B2935"
+            "backgroundColor": "#009587"
           }
         },
         {
@@ -808,6 +923,29 @@
                 "color": "#F1F5F9",
                 "wrap": true,
                 "weight": "bold"
+              },
+              {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "image",
+                    "url": "https://media.valorant-api.com/contenttiers/60bca009-4182-7998-dee7-b8a2558dc369/displayicon.png",
+                    "size": "xxs",
+                    "aspectMode": "fit",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "尊爵",
+                    "size": "xs",
+                    "color": "#D1548D",
+                    "wrap": true,
+                    "weight": "bold"
+                  }
+                ],
+                "spacing": "sm",
+                "alignItems": "center"
               },
               {
                 "type": "box",
@@ -863,7 +1001,7 @@
               }
             ],
             "paddingAll": "16px",
-            "backgroundColor": "#1B2935"
+            "backgroundColor": "#D1548D"
           }
         },
         {
@@ -911,6 +1049,29 @@
                 "color": "#F1F5F9",
                 "wrap": true,
                 "weight": "bold"
+              },
+              {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "image",
+                    "url": "https://media.valorant-api.com/contenttiers/60bca009-4182-7998-dee7-b8a2558dc369/displayicon.png",
+                    "size": "xxs",
+                    "aspectMode": "fit",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "尊爵",
+                    "size": "xs",
+                    "color": "#D1548D",
+                    "wrap": true,
+                    "weight": "bold"
+                  }
+                ],
+                "spacing": "sm",
+                "alignItems": "center"
               },
               {
                 "type": "box",
@@ -966,7 +1127,7 @@
               }
             ],
             "paddingAll": "16px",
-            "backgroundColor": "#1B2935"
+            "backgroundColor": "#D1548D"
           }
         },
         {
@@ -1014,6 +1175,29 @@
                 "color": "#F1F5F9",
                 "wrap": true,
                 "weight": "bold"
+              },
+              {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "image",
+                    "url": "https://media.valorant-api.com/contenttiers/12683d76-48d7-84a3-4e09-6985794f0445/displayicon.png",
+                    "size": "xxs",
+                    "aspectMode": "fit",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "精選",
+                    "size": "xs",
+                    "color": "#5A9FE2",
+                    "wrap": true,
+                    "weight": "bold"
+                  }
+                ],
+                "spacing": "sm",
+                "alignItems": "center"
               },
               {
                 "type": "box",
@@ -1069,7 +1253,7 @@
               }
             ],
             "paddingAll": "16px",
-            "backgroundColor": "#1B2935"
+            "backgroundColor": "#5A9FE2"
           }
         },
         {
@@ -1117,6 +1301,29 @@
                 "color": "#F1F5F9",
                 "wrap": true,
                 "weight": "bold"
+              },
+              {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "image",
+                    "url": "https://media.valorant-api.com/contenttiers/12683d76-48d7-84a3-4e09-6985794f0445/displayicon.png",
+                    "size": "xxs",
+                    "aspectMode": "fit",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "精選",
+                    "size": "xs",
+                    "color": "#5A9FE2",
+                    "wrap": true,
+                    "weight": "bold"
+                  }
+                ],
+                "spacing": "sm",
+                "alignItems": "center"
               },
               {
                 "type": "box",
@@ -1172,7 +1379,7 @@
               }
             ],
             "paddingAll": "16px",
-            "backgroundColor": "#1B2935"
+            "backgroundColor": "#5A9FE2"
           }
         },
         {
@@ -1220,6 +1427,29 @@
                 "color": "#F1F5F9",
                 "wrap": true,
                 "weight": "bold"
+              },
+              {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "image",
+                    "url": "https://media.valorant-api.com/contenttiers/12683d76-48d7-84a3-4e09-6985794f0445/displayicon.png",
+                    "size": "xxs",
+                    "aspectMode": "fit",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "精選",
+                    "size": "xs",
+                    "color": "#5A9FE2",
+                    "wrap": true,
+                    "weight": "bold"
+                  }
+                ],
+                "spacing": "sm",
+                "alignItems": "center"
               },
               {
                 "type": "box",
@@ -1275,7 +1505,7 @@
               }
             ],
             "paddingAll": "16px",
-            "backgroundColor": "#1B2935"
+            "backgroundColor": "#5A9FE2"
           }
         }
       ]

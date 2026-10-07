@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import time
 
 import httpx
@@ -41,10 +42,22 @@ class Assets:
                 children = [item, *(item.get("levels") or []), *(item.get("chromas") or [])]
                 if any(x.get("uuid", "").lower() == uuid.lower() for x in children):
                     child = next(x for x in children if x.get("uuid", "").lower() == uuid.lower())
-                    return {"name": child.get("displayName") or item["displayName"],
+                    result = {"name": child.get("displayName") or item["displayName"],
                             "image": item.get("largeArt") or child.get("fullRender")
                             or (item.get("chromas") or [{}])[0].get("fullRender")
                             or child.get("displayIcon") or item.get("displayIcon")}
+                    if endpoint == "weapons/skins" and item.get("contentTierUuid"):
+                        try:
+                            tier = self.lookup("contenttiers", item["contentTierUuid"])
+                            color = tier.get("highlightColor", "")
+                            if isinstance(color, str) and re.fullmatch(r"[0-9a-fA-F]{6}(?:[0-9a-fA-F]{2})?", color):
+                                # The public color is RGBA; use opaque RGB behind weapon renders.
+                                result.update(tier_color="#" + color[:6].upper(),
+                                              tier_name=tier.get("displayName"), tier_icon=tier.get("displayIcon"))
+                        except (httpx.HTTPError, ValueError, KeyError):
+                            # Avoid retrying a failed metadata download for every card in this query.
+                            self.memory.setdefault("contenttiers", [])
+                    return result
         return {"name": "未知物品 · " + uuid[:8], "image": None}
 
     def lookup(self, endpoint: str, uuid: str) -> dict:
