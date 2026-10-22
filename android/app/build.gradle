@@ -1,0 +1,40 @@
+plugins { id 'com.android.application'; id 'com.chaquo.python' }
+
+android {
+    namespace 'io.pearce.valora'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'io.pearce.valora'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '1.0.0'
+        ndk { abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86_64' }
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    signingConfigs {
+        personal {
+            if (System.getenv('ANDROID_KEYSTORE_FILE')) {
+                storeFile file(System.getenv('ANDROID_KEYSTORE_FILE'))
+                storePassword System.getenv('ANDROID_KEYSTORE_PASSWORD')
+                keyAlias 'valora'
+                keyPassword System.getenv('ANDROID_KEYSTORE_PASSWORD')
+                storeType 'PKCS12'
+            }
+        }
+    }
+    buildTypes { release { minifyEnabled false; signingConfig System.getenv('ANDROID_KEYSTORE_FILE') ? signingConfigs.personal : signingConfigs.debug } }
+}
+chaquopy {
+    defaultConfig {
+        version '3.11'
+        buildPython(System.getenv('VALBOT_BUILD_PYTHON') ?: '../../.venv/Scripts/python.exe')
+        pip { install 'httpx==0.28.1'; install 'portalocker==3.2.0' }
+    }
+}
+tasks.register('syncGamePython', Copy) {
+    from('../../valbot') { include '**/*.py' }
+    into('src/main/python/valbot')
+}
+tasks.configureEach { if (name.contains('Python') && name != 'syncGamePython') dependsOn 'syncGamePython' }
+dependencies { implementation 'androidx.work:work-runtime:2.10.1' }

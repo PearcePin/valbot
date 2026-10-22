@@ -6,7 +6,6 @@ from pathlib import Path
 import subprocess
 import tempfile
 
-from cryptography.fernet import Fernet, InvalidToken
 import portalocker
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -44,9 +43,16 @@ def atomic_write(path: Path, content: bytes) -> None:
 class Vault:
     """Encryption at rest; the local key must be protected together with the OS account."""
 
-    def __init__(self, directory: Path | None = None):
+    def __init__(self, directory: Path | None = None, cipher=None):
         self.directory = directory or data_dir()
         self.directory.mkdir(parents=True, exist_ok=True)
+        if cipher is not None:
+            # Android supplies its app-scoped Keystore cipher; no exportable key file.
+            self.cipher = cipher
+            self.invalid_token_types = (ValueError,)
+            return
+        from cryptography.fernet import Fernet, InvalidToken
+        self.invalid_token_types = (InvalidToken, ValueError)
         with portalocker.Lock(str(self.directory / "key.lock"), timeout=30):
             key = self.directory / "vault.key"
             if not key.exists():
@@ -59,7 +65,7 @@ class Vault:
             return {}
         try:
             return json.loads(self.cipher.decrypt(path.read_bytes()))
-        except (InvalidToken, ValueError) as exc:
+        except self.invalid_token_types as exc:
             raise RuntimeError("本機加密資料無法讀取；請還原 vault.key 或重新執行 setup.py。") from exc
 
     def write(self, name: str, value: dict) -> None:

@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src https: data:; connect-src 'none'; font-src 'self'">
+<title>VALORA — 你的特戰口袋助手</title><link rel="stylesheet" href="app.css"></head>
+<body><header class="topbar"><div class="brand"><span class="brandmark">V</span><span>VALORA<small>你的特戰口袋助手</small></span></div><button id="profile" class="profile" aria-label="帳號設定">AP</button></header>
+<main><section class="page-head"><div><p class="eyebrow" id="eyebrow">YOUR DAILY LOADOUT</p><h1 id="title">每日靈感，<span>為你裝填。</span></h1></div><button class="refresh iconbutton" id="refresh" aria-label="重新整理">↻</button></section>
+<section id="status-strip" class="status-strip"><span class="dot"></span><span id="connection-text">正在開啟你的口袋助手</span><span class="local-tag">ON DEVICE</span></section>
+<div id="filters" class="filters"></div><div id="content" aria-live="polite"></div><footer class="footnote">獨立開發的遊戲助手 · 非 Riot Games 官方產品</footer></main>
+<nav class="bottom-nav"><button data-tab="shop" class="active"><span>◇</span>商店</button><button data-tab="career"><span>▥</span>戰績</button><button data-tab="social"><span>♧</span>好友</button><button data-tab="settings"><span>⚙</span>我的</button></nav>
+<div id="toast" class="toast" role="status"></div><script src="app.js"></script></body></html>

@@ -12,3 +12,12 @@ logs/
 *.log
 dist/
 *.egg-info/
+.android-tools/
+android/.gradle/
+android/**/build/
+android/local.properties
+android/app/src/main/python/valbot/
+android/signing.properties
+*.jks
+*.keystore
+releases/*.apk
