@@ -68,6 +68,7 @@ public class MainActivity extends Activity {
             executor.execute(() -> {
                 try {
                     String result = api(action, payload);
+                    if (!action.equals("logout")) syncBrowserCookies();
                     if (action.equals("logout")) runOnUiThread(() -> {
                         CookieManager.getInstance().removeAllCookies(null); CookieManager.getInstance().flush();
                         getSharedPreferences("settings", MODE_PRIVATE).edit().putBoolean("daily", false).apply();
@@ -90,6 +91,21 @@ public class MainActivity extends Activity {
             });
         }
         @JavascriptInterface public boolean reminderEnabled() { return getSharedPreferences("settings", MODE_PRIVATE).getBoolean("daily", false); }
+    }
+    private void syncBrowserCookies() {
+        try {
+            JSONArray cookies = new JSONArray(Python.getInstance().getModule("valbot.mobile").callAttr("browser_cookies").toString());
+            runOnUiThread(() -> {
+                for (int i=0; i<cookies.length(); i++) {
+                    JSONObject cookie = cookies.optJSONObject(i);
+                    if (cookie == null) continue;
+                    String name = cookie.optString("name"), value = cookie.optString("value");
+                    if (!name.matches("[A-Za-z0-9_-]+") || value.contains(";") || value.contains("\r") || value.contains("\n")) continue;
+                    CookieManager.getInstance().setCookie("https://auth.riotgames.com/", name + "=" + value + "; Path=/; Secure; HttpOnly");
+                }
+                CookieManager.getInstance().flush();
+            });
+        } catch (Exception ignored) { }
     }
     private void openLogin(String selectedRegion) {
         if (loginDialog != null && loginDialog.isShowing()) return;

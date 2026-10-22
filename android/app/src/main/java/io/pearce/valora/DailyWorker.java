@@ -22,7 +22,8 @@ import java.util.concurrent.TimeUnit;
 
 public class DailyWorker extends Worker {
     public DailyWorker(Context context, WorkerParameters params) { super(context, params); }
-    public static void schedule(Context context, boolean enabled) {
+    public static void schedule(Context context, boolean enabled) { schedule(context, enabled, false); }
+    private static void schedule(Context context, boolean enabled, boolean append) {
         WorkManager manager = WorkManager.getInstance(context);
         if (!enabled) { manager.cancelUniqueWork("daily-store"); return; }
         Calendar next = Calendar.getInstance(TimeZone.getTimeZone("Asia/Taipei"));
@@ -31,7 +32,7 @@ public class DailyWorker extends Worker {
         OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(DailyWorker.class)
             .setInitialDelay(next.getTimeInMillis() - System.currentTimeMillis(), TimeUnit.MILLISECONDS)
             .setConstraints(new Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()).build();
-        manager.enqueueUniqueWork("daily-store", ExistingWorkPolicy.REPLACE, request);
+        manager.enqueueUniqueWork("daily-store", append ? ExistingWorkPolicy.APPEND_OR_REPLACE : ExistingWorkPolicy.REPLACE, request);
     }
     @Override public Result doWork() {
         Context context = getApplicationContext();
@@ -42,11 +43,15 @@ public class DailyWorker extends Worker {
             NotificationManager notifications = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             notifications.createNotificationChannel(new NotificationChannel("daily", "每日商店", NotificationManager.IMPORTANCE_DEFAULT));
             PendingIntent open = PendingIntent.getActivity(context, 0, new Intent(context, MainActivity.class), PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+            Notification.InboxStyle style = new Notification.InboxStyle().setBigContentTitle("你的每日商店");
+            org.json.JSONArray summary = result.optJSONObject("data") == null ? null : result.optJSONObject("data").optJSONArray("summary");
+            if (summary != null) for (int i=0;i<Math.min(8,summary.length());i++) style.addLine(summary.optString(i));
+            else style.addLine(message);
             notifications.notify(805, new Notification.Builder(context, "daily").setSmallIcon(io.pearce.valora.R.drawable.ic_valora)
-                .setContentTitle("VALORA · 每日商店").setContentText(message).setStyle(new Notification.BigTextStyle().bigText(message))
+                .setContentTitle("VALORA · 每日商店").setContentText(message).setStyle(style)
                 .setContentIntent(open).setAutoCancel(true).build());
         } catch (Exception ignored) { /* Never include private payloads in system logs. */ }
-        finally { schedule(context, true); }
+        finally { if (context.getSharedPreferences("settings", Context.MODE_PRIVATE).getBoolean("daily", false)) schedule(context, true, true); }
         return Result.success();
     }
 }

@@ -55,6 +55,11 @@ def status():
             "saved_messages": len(mailbox.state(settings, _vault).get("messages", []))}
 
 
+def browser_cookies():
+    # Native-only synchronization of rotated cookies; not exposed through dispatch/JS.
+    return json.dumps(_vault.read("session").get("cookies") or [])
+
+
 def login(uri, cookie_header, region):
     if region not in SHARDS:
         raise ValueError("請選擇有效區域")
@@ -96,6 +101,19 @@ def daily():
     return messages
 
 
+def daily_lines(messages):
+    lines = []
+    for message in messages:
+        container = message.get("contents") or {}
+        cards = container.get("contents", []) if container.get("type") == "carousel" else [container]
+        for card in cards:
+            header = (card.get("header") or {}).get("contents") or []
+            body = (card.get("body") or {}).get("contents") or []
+            if len(header) > 1 and body and body[0].get("text"):
+                lines.append(header[1].get("text", "商店") + " · " + body[0]["text"])
+    return lines
+
+
 def dispatch(action, payload="{}"):
     try:
         data = json.loads(payload)
@@ -108,7 +126,8 @@ def dispatch(action, payload="{}"):
             draft = friends.current_draft(config(), _vault)
             result["compose"] = {"status": draft.get("status"), "name": friends.display_name(draft["friend"]) if draft.get("friend") else ""}
         elif action == "daily":
-            result = {"messages": daily()}
+            messages = daily()
+            result = {"messages": messages, "summary": daily_lines(messages)}
         elif action == "region":
             if data.get("region") not in SHARDS:
                 raise ValueError("區域不正確")

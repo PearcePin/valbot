@@ -1,5 +1,7 @@
 # Valorant LINE Bot
 
+**Android 手機版：[下載 VALORA APK](https://github.com/PearcePin/valbot/releases/download/android-v1.0.0/VALORA-1.0.0.apk) · [手機安裝與限制](android/README.md)**。手機獨立執行原有功能，免 LINE／外部伺服器；Riot 仍可能要求重新驗證。
+
 特戰英豪個人 LINE 助手，支援 **Ubuntu 與 Windows 10／11**。使用 FastAPI、LINE 官方 SDK v3、httpx，以 Flex Message 呈現商店、戰績、牌位與 Riot 好友資訊。安裝器自動準備 **Python 3.12**，不需要移除系統 Python 3.14。
 
 **第一次安裝請看：[詳細安裝與排錯](docs/install.md)。** 包含 Token、User ID、ssid 的確切位置、404／HTTP 406、Cloudflare、背景服務、更新及換電腦步驟。[Riot 登入說明](docs/login.md)
