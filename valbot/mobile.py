@@ -68,11 +68,12 @@ def login(uri, cookie_header, region):
     cookies.load(cookie_header or "")
     auth = RiotAuth(_vault)
     # Work transactionally: keep a previous valid session until verification succeeds.
-    with auth.client() as client:
-        for name, morsel in cookies.items():
-            client.cookies.set(name, morsel.value, domain="auth.riotgames.com", path="/")
-        session = auth.finish(client, uri)
-    _vault.write("config", {"region": region, "line_user_id": "android-local", "riot_puuid": session["puuid"]})
+    with _vault.lock("auth"):
+        with auth.client() as client:
+            for name, morsel in cookies.items():
+                client.cookies.set(name, morsel.value, domain="auth.riotgames.com", path="/")
+            session = auth.finish(client, uri)
+        _vault.write("config", {"region": region, "line_user_id": "android-local", "riot_puuid": session["puuid"]})
     return status()
 
 
@@ -95,9 +96,13 @@ def run_command(command):
 
 
 def daily():
+    settings = config()
     with httpx.Client(timeout=20) as http:
-        messages = BotService(RiotClient(config(), RiotAuth(_vault), http)).daily()
-    _vault.write("mobile_daily", {"date": time.strftime("%Y-%m-%d"), "messages": messages})
+        messages = BotService(RiotClient(settings, RiotAuth(_vault), http)).daily()
+    with _vault.lock("auth"):
+        if config().get("riot_puuid") != settings.get("riot_puuid") or not _vault.read("session"):
+            raise AuthError("帳號已變更")
+        _vault.write("mobile_daily", {"date": time.strftime("%Y-%m-%d"), "messages": messages})
     return messages
 
 
