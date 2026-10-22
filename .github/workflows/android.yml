@@ -35,7 +35,7 @@ jobs:
           VALBOT_BUILD_PYTHON: ${{ env.pythonLocation }}/bin/python
           ANDROID_KEYSTORE_FILE: ${{ runner.temp }}/valora.p12
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-        run: gradle --no-daemon --console=plain assembleRelease
+        run: gradle --no-daemon --console=plain assembleRelease assembleReleaseAndroidTest
       - name: Verify APK signature
         run: |
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose android/app/build/outputs/apk/release/app-release.apk
@@ -56,6 +56,9 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -memory 2048
           script: |
             adb install releases/VALORA-1.0.0.apk
+            adb install android/app/build/outputs/apk/androidTest/release/app-release-androidTest.apk
+            adb shell am instrument -w io.pearce.valora.test/androidx.test.runner.AndroidJUnitRunner | tee releases/instrumentation.txt
+            grep -q 'OK (3 tests)' releases/instrumentation.txt
             adb shell am start -W -n io.pearce.valora/.MainActivity
             sleep 20
             adb shell pidof io.pearce.valora

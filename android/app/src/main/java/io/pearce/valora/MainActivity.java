@@ -12,6 +12,7 @@ import android.webkit.JavascriptInterface;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.WebChromeClient;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
@@ -38,6 +39,7 @@ public class MainActivity extends Activity {
         getWindow().setStatusBarColor(Color.rgb(11,18,32));
         getWindow().setNavigationBarColor(Color.rgb(11,18,32));
         web = new WebView(this); configure(web);
+        web.setWebChromeClient(new WebChromeClient());
         web.setBackgroundColor(Color.rgb(11,18,32));
         web.addJavascriptInterface(new Bridge(), "ValoraNative");
         web.setWebViewClient(new WebViewClient() {
@@ -119,6 +121,7 @@ public class MainActivity extends Activity {
         TextView origin = new TextView(this); origin.setTextColor(Color.WHITE); origin.setText("Riot 安全登入");
         toolbar.addView(close); toolbar.addView(origin, new LinearLayout.LayoutParams(0, -2, 1)); root.addView(toolbar);
         loginView = new WebView(this); configure(loginView);
+        loginView.setWebChromeClient(new WebChromeClient());
         // This WebView has NO JavascriptInterface. Password/2FA stay on Riot's page.
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(loginView, true);
