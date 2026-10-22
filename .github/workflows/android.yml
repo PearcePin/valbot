@@ -6,6 +6,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+concurrency:
+  group: valora-android-release
+  cancel-in-progress: true
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -74,5 +77,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$GITHUB_SHA"
           gh release view android-v1.0.0 >/dev/null 2>&1 || gh release create android-v1.0.0 --title 'VALORA Android 1.0.0 · 個人測試版' --notes-file android/RELEASE_NOTES.md
           gh release upload android-v1.0.0 releases/VALORA-1.0.0.apk releases/SHA256SUMS.txt --clobber
