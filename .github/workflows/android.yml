@@ -56,7 +56,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -memory 2048
           script: |
             adb install releases/VALORA-1.0.0.apk
-            adb install android/app/build/outputs/apk/androidTest/release/app-release-androidTest.apk
+            adb install -t android/app/build/outputs/apk/androidTest/release/app-release-androidTest.apk
             adb shell am instrument -w io.pearce.valora.test/androidx.test.runner.AndroidJUnitRunner | tee releases/instrumentation.txt
             grep -q 'OK (3 tests)' releases/instrumentation.txt
             adb shell am start -W -n io.pearce.valora/.MainActivity

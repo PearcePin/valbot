@@ -60,6 +60,7 @@ public class MainActivity extends Activity {
         view.getSettings().setMixedContentMode(android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         view.getSettings().setSafeBrowsingEnabled(true);
     }
+    WebView testWebView() { return web; }
     private String api(String action, String payload) { return Python.getInstance().getModule("valbot.mobile").callAttr("dispatch", action, payload).toString(); }
     private void deliver(String id, String json) {
         runOnUiThread(() -> web.evaluateJavascript("window.nativeResult(" + JSONObject.quote(id) + "," + JSONObject.quote(json) + ")", null));

@@ -8,6 +8,10 @@ import static org.junit.Assert.*;
 import android.util.Base64;
 import com.chaquo.python.Python;
 import org.json.JSONObject;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import android.os.Handler;
+import android.os.Looper;
 
 @RunWith(AndroidJUnit4.class)
 public class NativeSmokeTest {
@@ -26,9 +30,20 @@ public class NativeSmokeTest {
         assertEquals("ap", status.getJSONObject("data").getString("region"));
         assertFalse(status.getJSONObject("data").getBoolean("logged_in"));
     }
-    @Test public void activityCanStartWithoutExternalServer() {
+    @Test public void activityCanStartWithoutExternalServer() throws Exception {
+        CountDownLatch rendered = new CountDownLatch(1);
+        Handler handler = new Handler(Looper.getMainLooper());
+        long deadline = System.currentTimeMillis() + 18000;
         try (ActivityScenario<MainActivity> activity = ActivityScenario.launch(MainActivity.class)) {
-            activity.onActivity(value -> assertNotNull(value.findViewById(android.R.id.content)));
+            activity.onActivity(value -> handler.postDelayed(new Runnable() {
+                @Override public void run() {
+                    value.testWebView().evaluateJavascript("document.querySelectorAll('.feature').length", count -> {
+                        if ("4".equals(count)) rendered.countDown();
+                        else if (System.currentTimeMillis() < deadline) handler.postDelayed(this, 500);
+                    });
+                }
+            }, 500));
+            assertTrue("Welcome cards did not render in Android WebView", rendered.await(20, TimeUnit.SECONDS));
         }
     }
 }

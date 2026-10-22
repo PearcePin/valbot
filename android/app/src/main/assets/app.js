@@ -1,4 +1,6 @@
 'use strict';
+// Android 8-11 devices may retain a WebView older than Chromium 86.
+if(!Element.prototype.replaceChildren)Element.prototype.replaceChildren=function(...children){while(this.firstChild)this.removeChild(this.firstChild);this.append(...children);};
 const $=s=>document.querySelector(s), content=$('#content');
 const tabs={shop:{title:['每日靈感，','為你裝填。'],eyebrow:'YOUR DAILY LOADOUT',filters:['商店','夜市','配件','精選組合包','錢包']},career:{title:['每一場對戰，','都有你的軌跡。'],eyebrow:'PLAY. REFLECT. IMPROVE.',filters:['戰績','牌位']},social:{title:['你的戰友，','就在這裡。'],eyebrow:'BETTER TOGETHER',filters:['好友','好友訊息']},settings:{title:['專屬你的，','口袋指揮中心。'],eyebrow:'MADE FOR YOUR GAME',filters:[]}};
 let activeTab='shop',activeCommand='商店',session={logged_in:false,region:'ap'},pending=new Map(),serial=0,operation=0;
