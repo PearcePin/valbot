@@ -15,6 +15,10 @@ import android.webkit.WebViewClient;
 import android.webkit.WebChromeClient;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.Window;
+import android.view.WindowInsets;
+import android.graphics.Insets;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Button;
 import android.widget.TextView;
@@ -45,12 +49,30 @@ public class MainActivity extends Activity {
         web.setWebViewClient(new WebViewClient() {
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) { return true; }
         });
-        web.setOnApplyWindowInsetsListener((view, insets) -> {
-            view.setPadding(insets.getSystemWindowInsetLeft(), insets.getSystemWindowInsetTop(), insets.getSystemWindowInsetRight(), insets.getSystemWindowInsetBottom());
+        // Reserve system bars outside WebView: its own padding does not reliably
+        // move HTML/fixed navigation away from Android's edge-to-edge overlays.
+        FrameLayout safeArea = new FrameLayout(this);
+        safeArea.setBackgroundColor(Color.rgb(11,18,32));
+        safeArea.addView(web, new FrameLayout.LayoutParams(-1, -1));
+        fitSystemBars(getWindow(), safeArea);
+        setContentView(safeArea);
+        safeArea.requestApplyInsets();
+        web.loadUrl("file:///android_asset/index.html");
+    }
+    private void fitSystemBars(Window window, View content) {
+        if (Build.VERSION.SDK_INT >= 30) {
+            window.setDecorFitsSystemWindows(false);
+        }
+        content.setOnApplyWindowInsetsListener((view, insets) -> {
+            if (Build.VERSION.SDK_INT >= 30) {
+                Insets safe = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
+                view.setPadding(safe.left, safe.top, safe.right, safe.bottom);
+                return WindowInsets.CONSUMED;
+            }
+            view.setPadding(insets.getSystemWindowInsetLeft(), insets.getSystemWindowInsetTop(),
+                insets.getSystemWindowInsetRight(), insets.getSystemWindowInsetBottom());
             return insets.consumeSystemWindowInsets();
         });
-        setContentView(web);
-        web.loadUrl("file:///android_asset/index.html");
     }
     private void configure(WebView view) {
         view.getSettings().setJavaScriptEnabled(true);
@@ -147,7 +169,9 @@ public class MainActivity extends Activity {
         root.addView(loginView, new LinearLayout.LayoutParams(-1, 0, 1));
         loginDialog.setContentView(root); loginDialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         loginDialog.setOnDismissListener(dialog -> { loginView.stopLoading(); loginView.destroy(); });
+        fitSystemBars(loginDialog.getWindow(), root);
         loginDialog.show(); loginDialog.getWindow().setLayout(-1, -1);
+        root.requestApplyInsets();
         loginView.loadUrl(LOGIN + java.util.UUID.randomUUID());
     }
     private void importLogin(String uri) {

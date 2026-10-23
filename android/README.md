@@ -1,6 +1,6 @@
 # VALORA Android
 
-直接下載：[VALORA-1.0.0.apk](https://github.com/PearcePin/valbot/releases/download/android-v1.0.0/VALORA-1.0.0.apk)
+直接下載：[VALORA-1.0.1.apk](https://github.com/PearcePin/valbot/releases/download/android-v1.0.1/VALORA-1.0.1.apk)
 
 ## 安裝
 
